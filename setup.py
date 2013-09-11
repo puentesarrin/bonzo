@@ -8,7 +8,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup
 
-version = "0.1.0"
+version = "0.1.+"
 
 
 f = open('README.rst')

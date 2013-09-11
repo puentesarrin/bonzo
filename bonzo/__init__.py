@@ -2,7 +2,7 @@
 """Bonzo is a minimalistic SMTP Proxy built on top of Tornado."""
 
 
-version_tuple = (0, 1)
+version_tuple = (0, 1, '+')
 
 
 def get_version_string():
