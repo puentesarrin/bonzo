@@ -3,7 +3,7 @@ import smtplib
 from email.mime.text import MIMEText
 
 
-s = smtplib.SMTP('localhost')
+s = smtplib.SMTP('localhost', 2525)
 s.set_debuglevel(1)
 msg = MIMEText("""This is the message's body.""")
 sender = 'me@example.com'
