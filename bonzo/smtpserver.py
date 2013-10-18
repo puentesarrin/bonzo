@@ -7,6 +7,8 @@ from tornado import stack_context
 
 from bonzo import version
 
+CRLF = '\r\n'
+
 
 class SMTPServer(TCPServer):
 
@@ -75,7 +77,7 @@ class SMTPConnection(object):
         self._header_callback = None
         self._clear_request_state()
 
-    def write(self, chunk, callback=None, read_until_delimiter='\r\n'):
+    def write(self, chunk, callback=None, read_until_delimiter=CRLF):
         """Writes a chunk of output to the stream."""
         if not self.stream.closed():
             if callback is None:
@@ -83,7 +85,7 @@ class SMTPConnection(object):
                                              read_until_delimiter,
                                              self._on_commands)
             self._write_callback = stack_context.wrap(callback)
-            self.stream.write(chunk + '\r\n', self._on_write_complete)
+            self.stream.write(chunk + CRLF, self._on_write_complete)
 
     def finish(self):
         """Finishes the request."""
@@ -127,7 +129,7 @@ class SMTPConnection(object):
             method(arg)
         elif self.__state == self.DATA:
             data = []
-            for text in line.split('\r\n'):
+            for text in line.split(CRLF):
                 if text and text[0] == '.':
                     data.append(text[1:])
                 else:
@@ -214,7 +216,7 @@ class SMTPConnection(object):
             return
         self.__state = self.DATA
         self.write('354 End data with <CR><LF>.<CR><LF>',
-                   read_until_delimiter='\r\n.\r\n')
+                   read_until_delimiter='{0}.{0}'.format(CRLF))
 
     def _on_data(self, data):
         message = email.message_from_string(data)
