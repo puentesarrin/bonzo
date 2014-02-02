@@ -4,6 +4,7 @@
 *~
 build/*
 dist/*
+*.egg/*
 *.egg-info/*
 doc/build/*
 doc/_templates/*
