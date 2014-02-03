@@ -8,21 +8,15 @@ except ImportError:
     use_setuptools()
     from setuptools import setup
 
-version = "0.1.+"
+from bonzo import __version__
 
 
-f = open('README.rst')
-try:
-    try:
-        readme_content = f.read()
-    except:
-        readme_content = ''
-finally:
-    f.close()
+with open('README.rst') as f:
+    readme_content = f.read()
 
 setup(
     name='bonzo',
-    version=version,
+    version=__version__,
     url='https://github.com/puentesarrin/bonzo',
     description='Bonzo is a minimalistic SMTP Proxy built on top of Tornado.',
     long_description=readme_content,
