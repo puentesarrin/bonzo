@@ -9,4 +9,4 @@ dist/*
 doc/build/*
 doc/_templates/*
 env/*
-
+.tox/*
