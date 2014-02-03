@@ -2,7 +2,7 @@ import os
 import sys
 from unittest import defaultTestLoader, TextTestRunner, TestSuite
 
-TESTS = ('smtpserver_test', )
+TESTS = ('server_test', )
 
 
 def make_suite(prefix='', extra=(), force_all=False):

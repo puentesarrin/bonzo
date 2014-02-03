@@ -1,6 +1,6 @@
 
 from tornado.testing import AsyncTestCase, bind_unused_port
-from bonzo.smtpserver import SMTPServer
+from bonzo.server import SMTPServer
 
 
 class AsyncSMTPTestCase(AsyncTestCase):
