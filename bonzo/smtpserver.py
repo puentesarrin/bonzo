@@ -117,14 +117,17 @@ class SMTPConnection(object):
                 return
             i = line.find(' ')
             if i < 0:
+                raw_command = line.strip()
                 command = line.lower()
                 arg = None
             else:
+                raw_command = line[:i].strip()
                 command = line[:i].lower()
                 arg = line[i + 1:].strip()
             method = getattr(self, 'command_' + command.strip(), None)
             if not method:
-                self.write('502 Error: command "%s" not implemented' % command)
+                self.write('502 Error: command "%s" not implemented' %
+                           raw_command)
                 return
             method(arg)
         elif self.__state == self.DATA:
@@ -191,7 +194,7 @@ class SMTPConnection(object):
             return
         address = self.__getaddr('TO:', arg) if arg else None
         if not address:
-            self.write('501 Syntax: RCPT TO: <address>')
+            self.write('501 Syntax: RCPT TO:<address>')
             return
         self.__rcpttos.append(address)
         self.write('250 Ok')

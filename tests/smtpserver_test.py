@@ -7,7 +7,7 @@ from bonzo.testing import AsyncSMTPTestCase
 
 
 def request_callback(message):
-    print(message)
+    pass
 
 
 class SMTPServerTest(AsyncSMTPTestCase):
@@ -43,11 +43,12 @@ class SMTPServerTest(AsyncSMTPTestCase):
 
     def test_not_implemented_command(self):
         self.connect()
-        for command in [b'BADCOMMAND', b'UNKNOWN', b'BONZO']:
+        for command in [b'BADCOMMAND', b'unknown', b'Bonzo']:
             self.stream.write(b'%s\r\n' % command)
             data = self.read_response()
-            self.assertEqual(data, b'502 Error: command "%s" not implemented' %
-                                   command)
+            self.assertEqual(data,
+                             b'502 Error: command "%s" not implemented\r\n' %
+                             command)
         self.close()
 
     def test_helo(self):
