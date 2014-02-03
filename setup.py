@@ -33,4 +33,5 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Topic :: Internet :: Proxy Servers'],
+    test_suite='tests.runtests',
 )
