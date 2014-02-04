@@ -20,7 +20,7 @@ setup(
     url='https://github.com/puentesarrin/bonzo',
     description='Bonzo is a minimalistic SMTP Proxy built on top of Tornado.',
     long_description=readme_content,
-    author=u'Jorge Puente Sarrín',
+    author='Jorge Puente Sarrín',
     author_email='puentesarrin@gmail.com',
     packages=['bonzo'],
     keywords=['bonzo', 'tornado', 'smtp', 'proxy'],

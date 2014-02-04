@@ -1,6 +1,7 @@
 
 import socket
 
+from tornado.escape import utf8
 from tornado.iostream import IOStream
 from bonzo import version
 from bonzo.testing import AsyncSMTPTestCase
@@ -37,18 +38,17 @@ class SMTPServerTest(AsyncSMTPTestCase):
     def test_welcome_connection(self):
         self.connect(read_response=False)
         data = self.read_response()
-        self.assertEqual(data,
-                         b'220 127.0.0.1 Bonzo SMTP proxy %s\r\n' % version)
+        self.assertEqual(data, utf8('220 127.0.0.1 Bonzo SMTP proxy %s\r\n' %
+                                    version))
         self.close()
 
     def test_not_implemented_command(self):
         self.connect()
-        for command in [b'BADCOMMAND', b'unknown', b'Bonzo']:
-            self.stream.write(b'%s\r\n' % command)
+        for command in ['BADCOMMAND', 'unknown', 'Bonzo']:
+            self.stream.write(utf8('%s\r\n' % command))
             data = self.read_response()
             self.assertEqual(data,
-                             b'502 Error: command "%s" not implemented\r\n' %
-                             command)
+                utf8('502 Error: command "%s" not implemented\r\n' % command))
         self.close()
 
     def test_helo(self):
@@ -99,7 +99,7 @@ class SMTPServerTest(AsyncSMTPTestCase):
     def test_from(self):
         for address in ['mail@example.com', '<mail@example.com>']:
             self.connect()
-            self.stream.write(b'MAIL FROM:%s\r\n' % address)
+            self.stream.write(utf8('MAIL FROM:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
             self.close()
@@ -127,7 +127,7 @@ class SMTPServerTest(AsyncSMTPTestCase):
             self.stream.write(b'MAIL FROM:mail@example.com\r\n')
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
-            self.stream.write(b'RCPT TO:%s\r\n' % address)
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
             self.close()
@@ -155,7 +155,7 @@ class SMTPServerTest(AsyncSMTPTestCase):
         data = self.read_response()
         self.assertEqual(data, b'250 Ok\r\n')
         for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(b'RCPT TO:%s\r\n' % address)
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
         self.close()
@@ -180,13 +180,13 @@ class SMTPServerTest(AsyncSMTPTestCase):
         data = self.read_response()
         self.assertEqual(data, b'250 Ok\r\n')
         for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(b'RCPT TO:%s\r\n' % address)
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
         self.stream.write(b'DATA\r\n')
         data = self.read_response()
         self.assertEqual(data, b'354 End data with <CR><LF>.<CR><LF>\r\n')
-        self.stream.write('This is a message\r\n.\r\n')
+        self.stream.write(b'This is a message\r\n.\r\n')
         data = self.read_response()
         self.assertEqual(data, b'250 Ok\r\n')
         self.close()
@@ -214,7 +214,7 @@ class SMTPServerTest(AsyncSMTPTestCase):
         data = self.read_response()
         self.assertEqual(data, b'250 Ok\r\n')
         for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(b'RCPT TO:%s\r\n' % address)
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
         self.stream.write(b'DATA args\r\n')

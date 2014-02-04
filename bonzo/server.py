@@ -2,6 +2,7 @@
 import email
 import functools
 
+from tornado.escape import to_unicode, utf8
 from tornado.tcpserver import TCPServer
 from tornado import stack_context
 
@@ -82,10 +83,10 @@ class SMTPConnection(object):
         if not self.stream.closed():
             if callback is None:
                 callback = functools.partial(self.stream.read_until,
-                                             read_until_delimiter,
+                                             utf8(read_until_delimiter),
                                              self._on_commands)
             self._write_callback = stack_context.wrap(callback)
-            self.stream.write(chunk + CRLF, self._on_write_complete)
+            self.stream.write(utf8(chunk + CRLF), self._on_write_complete)
 
     def finish(self):
         """Finishes the request."""
@@ -111,6 +112,7 @@ class SMTPConnection(object):
         self.close()
 
     def _on_commands(self, line):
+        line = to_unicode(line)
         if self.__state == self.COMMAND:
             if not line:
                 self.write('500 Error: bad syntax')
@@ -118,13 +120,11 @@ class SMTPConnection(object):
             i = line.find(' ')
             if i < 0:
                 raw_command = line.strip()
-                command = line.lower()
                 arg = None
             else:
                 raw_command = line[:i].strip()
-                command = line[:i].lower()
                 arg = line[i + 1:].strip()
-            method = getattr(self, 'command_' + command.strip(), None)
+            method = getattr(self, 'command_' + raw_command.lower(), None)
             if not method:
                 self.write('502 Error: command "%s" not implemented' %
                            raw_command)

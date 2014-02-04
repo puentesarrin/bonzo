@@ -9,11 +9,11 @@ from bonzo.server import SMTPServer
 
 
 def receive_message(message):
-    print "New received message: "
-    print "From: " + message['from']
-    print "Subject: " + message['subject']
+    print("New received message: ")
+    print("From: %s" % message['from'])
+    print("Subject: %s" % message['subject'])
     for line in email.iterators.body_line_iterator(message):
-        print line
+        print(line)
 
 
 if __name__ == '__main__':
