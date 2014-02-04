@@ -5,7 +5,7 @@ import email
 import sys
 sys.path = ['..'] + sys.path
 
-from bonzo.smtpserver import SMTPServer
+from bonzo.server import SMTPServer
 
 
 def receive_message(message):

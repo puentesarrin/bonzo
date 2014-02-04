@@ -12,7 +12,7 @@ Bonzo is a minimalistic SMTP Proxy built on top of Tornado_.
    import tornado.ioloop
    import email
 
-   from bonzo.smtpserver import SMTPServer
+   from bonzo.server import SMTPServer
 
 
    def receive_message(message):
