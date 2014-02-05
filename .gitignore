@@ -6,8 +6,8 @@ build/*
 dist/*
 *.egg/*
 *.egg-info/*
-doc/build/*
-doc/_templates/*
+docs/_build/*
+docs/_templates/*
 env/*
 .tox/*
 .coverage
