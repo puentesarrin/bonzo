@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 import socket
 
 from tornado.escape import utf8
@@ -47,8 +47,8 @@ class SMTPServerTest(AsyncSMTPTestCase):
         for command in ['BADCOMMAND', 'unknown', 'Bonzo']:
             self.stream.write(utf8('%s\r\n' % command))
             data = self.read_response()
-            self.assertEqual(data,
-                utf8('502 Error: command "%s" not implemented\r\n' % command))
+            self.assertEqual(data, utf8('502 Error: command "%s" not '
+                                        'implemented\r\n' % command))
         self.close()
 
     def test_helo(self):

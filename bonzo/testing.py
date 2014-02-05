@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from tornado.testing import AsyncTestCase, bind_unused_port
 from bonzo.server import SMTPServer
 
