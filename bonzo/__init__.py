@@ -8,7 +8,7 @@ else:
     basestring_type = basestring
 
 
-version_tuple = (0, 1, 1, '+')
+version_tuple = (0, 1, 2)
 
 
 def get_version_string():
