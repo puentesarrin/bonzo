@@ -10,3 +10,5 @@ doc/build/*
 doc/_templates/*
 env/*
 .tox/*
+.coverage
+htmlcov/*
