@@ -1,0 +1,7 @@
+Release notes for Bonzo 0.1.2
+=============================
+
+*February 04, 2014*
+
+- Added Python 3 support.
+- Added Travis and Coveralls configuration. Thanks to Luis Mayta.

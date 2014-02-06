@@ -1,0 +1,14 @@
+Release notes for Bonzo 0.1.1
+=============================
+
+*February 02, 2014*
+
+- Fixed lack of tests by adding the test suite to cover the
+  :doc:`0.1.0 <0.1.0>` version.
+- The release just fixes this bad software engineering.
+
+New modules
+~~~~~~~~~~~
+
+- The :mod:`bonzo.testing` module provides an interface to run asynchronous
+  tests over a :class:`~.server.SMTPServer` running on a random port.

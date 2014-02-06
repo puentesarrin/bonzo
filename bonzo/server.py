@@ -57,7 +57,7 @@ class SMTPConnection(object):
 
         Use this instead of accessing
         `SMTPConnection.stream.set_close_callback
-        <.BaseIOStream.set_close_callback>` directly (which was the
+        <tornado.BaseIOStream.set_close_callback>` directly (which was the
         recommended approach prior to Tornado 3.0).
         """
         self._close_callback = stack_context.wrap(callback)

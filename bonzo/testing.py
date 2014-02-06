@@ -6,8 +6,8 @@ from bonzo.server import SMTPServer
 class AsyncSMTPTestCase(AsyncTestCase):
     """A test case that starts up an SMTP server.
 
-    Subclasses must override ``get_request_callback()`, which returns a
-    `.SMTPServer` callback to be tested.
+    Subclasses must override :meth:`get_request_callback()`, which returns a
+    :class:`~.server.SMTPServer` callback to be tested.
     """
 
     def setUp(self):
@@ -24,8 +24,8 @@ class AsyncSMTPTestCase(AsyncTestCase):
                           **self.get_smtpserver_options())
 
     def get_request_callback(self):
-        """Should be overrridden by subclasses to return a `.SMTPServer`
-        callback.
+        """Should be overridden by subclasses to return a
+        :class:`~.server.SMTPServer` callback.
         """
         raise NotImplementedError()
 

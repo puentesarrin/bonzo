@@ -30,7 +30,7 @@ import bonzo
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest',
               'sphinx.ext.intersphinx', 'sphinx.ext.coverage',
-              'sphinx.ext.viewcode']
+              'sphinx.ext.viewcode', 'sphinx.ext.extlinks']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -257,7 +257,7 @@ texinfo_documents = [
 epub_title = project
 epub_author = author
 epub_publisher = author
-epub_copyright = '2014, ' + author
+epub_copyright = copyright
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.
@@ -313,4 +313,8 @@ epub_copyright = '2014, ' + author
 intersphinx_mapping = {
     'python': ('http://docs.python.org/', None),
     'tornado': ('http://www.tornadoweb.org/en/stable/', None),
+}
+
+extlinks = {
+    'gh-user': ('https://github.com/%s', ''),
 }

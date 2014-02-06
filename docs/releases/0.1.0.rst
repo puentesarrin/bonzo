@@ -1,0 +1,7 @@
+Release notes for Bonzo 0.1.0
+=============================
+
+*August 21, 2013*
+
+- Initial and simple version without tests.
+- A port of the Python :mod:`smtpd` module which uses :mod:`asyncore`.
