@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""A non-blocking, single-threaded SMTP server."""
 import email
 import functools
 
@@ -12,19 +13,33 @@ CRLF = '\r\n'
 
 
 class SMTPServer(TCPServer):
+    """A non-blocking, single-threaded SMTP server.
+
+    A server is defined by a request callback that takes an email as an
+    argument.
+    """
 
     def __init__(self, request_callback, io_loop=None, **kwargs):
         self.request_callback = request_callback
         TCPServer.__init__(self, io_loop=io_loop, **kwargs)
 
     def handle_stream(self, stream, address):
+        """Handle the stream by executing the request callback.
+        """
         SMTPConnection(stream, address, self.request_callback)
 
 
 class SMTPConnection(object):
+    """Handles a connection to an SMTP client, executing SMTP commands.
+
+    This class uses its :attr:`COMMAND` and :attr:`DATA` attributes as a
+    simple "enum" to manage the connection state.
+    """
 
     COMMAND = 0
+    """Used to set the state to receive any command."""
     DATA = 1
+    """Used to set the state to receive data."""
 
     def __init__(self, stream, address, request_callback):
         self.stream = stream
@@ -54,11 +69,6 @@ class SMTPConnection(object):
 
     def set_close_callback(self, callback):
         """Sets a callback that will be run when the connection is closed.
-
-        Use this instead of accessing
-        `SMTPConnection.stream.set_close_callback
-        <tornado.BaseIOStream.set_close_callback>` directly (which was the
-        recommended approach prior to Tornado 3.0).
         """
         self._close_callback = stack_context.wrap(callback)
 
@@ -72,6 +82,8 @@ class SMTPConnection(object):
         self._clear_request_state()
 
     def close(self):
+        """Close the stream.
+        """
         self.stream.close()
         # Remove this reference to self, which would otherwise cause a
         # cycle and delay garbage collection of this connection.
@@ -159,6 +171,13 @@ class SMTPConnection(object):
         return address
 
     def command_helo(self, arg):
+        """Handles the ``HELO`` SMTP command.
+
+        - Writes a ``501`` error code to the stream when the network name of
+          the connecting machine is not received.
+        - Writes a ``503`` error code to the stream when a ``HELO`` command
+          already was received.
+        """
         if not arg:
             self.write('501 Syntax: HELO hostname')
             return
@@ -169,15 +188,29 @@ class SMTPConnection(object):
             self.write('250 %s' % self.address[0])
 
     def command_noop(self, arg):
+        """Handles the ``NOOP`` SMTP command.
+
+        - Writes a ``501`` error code to the stream when an argument is not
+          received.
+        """
         if arg:
             self.write('501 Syntax: NOOP')
         else:
             self.write('250 Ok')
 
     def command_quit(self, arg):
+        """Handles the ``QUIT`` SMTP command.
+        """
         self.write('221 Bye', self.finish)
 
     def command_mail(self, arg):
+        """Handles the ``MAIL`` SMTP command.
+
+        - Writes a ``501`` error code to the stream when the ``from`` address
+          is not received.
+        - Writes a ``503`` error code to the stream when a ``MAIL`` command
+          already was received.
+        """
         address = self.__getaddr('FROM:', arg) if arg else None
         if not address:
             self.write('501 Syntax: MAIL FROM:<address>')
@@ -189,6 +222,13 @@ class SMTPConnection(object):
         self.write('250 Ok')
 
     def command_rcpt(self, arg):
+        """Handles the ``RCPT`` SMTP command.
+
+        - Writes a ``503`` error code to the stream when a ``MAIL`` command was
+          not previously received.
+        - Writes a ``501`` error code to the stream when the ``to`` address is
+          not received.
+        """
         if not self.__mailfrom:
             self.write('503 Error: need MAIL command')
             return
@@ -200,6 +240,11 @@ class SMTPConnection(object):
         self.write('250 Ok')
 
     def command_rset(self, arg):
+        """Handles the ``RSET`` SMTP command.
+
+        - Writes a ``501`` error code to the stream when an argument is not
+          received.
+        """
         if arg:
             self.write('501 Syntax: RSET')
             return
@@ -211,6 +256,13 @@ class SMTPConnection(object):
         self.write('250 Ok')
 
     def command_data(self, arg):
+        """Handles the ``DATA`` SMTP command.
+
+        - Writes a ``503`` error code to the stream when a ``RCPT`` command was
+          not previously received.
+        - Writes a ``501`` error code to the stream when an argument is not
+          received.
+        """
         if not self.__rcpttos:
             self.write('503 Error: need RCPT command')
             return

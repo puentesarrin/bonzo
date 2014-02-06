@@ -1,5 +1,5 @@
-bonzo Package
-=============
+Package Documentation
+=====================
 
 :mod:`bonzo` Package
 --------------------
@@ -9,8 +9,8 @@ bonzo Package
     :undoc-members:
     :show-inheritance:
 
-Modules
--------
+:mod:`bonzo` Modules
+--------------------
 
 .. toctree::
    :maxdepth: 4

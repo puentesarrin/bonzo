@@ -1,4 +1,4 @@
-Release notes for Bonzo 0.1.1
+Release Notes for Bonzo 0.1.1
 =============================
 
 *February 02, 2014*

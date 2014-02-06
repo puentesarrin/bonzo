@@ -4,5 +4,4 @@
 .. automodule:: bonzo.server
    :synopsis: Non-blocking SMTP server
    :members:
-   :undoc-members:
    :show-inheritance:

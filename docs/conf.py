@@ -317,4 +317,5 @@ intersphinx_mapping = {
 
 extlinks = {
     'gh-user': ('https://github.com/%s', ''),
+    'issue': ('https://github.com/puentesarrin/bonzo/issues/%s', ''),
 }

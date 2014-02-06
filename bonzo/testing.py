@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Unit testing support for asynchronous code."""
 from tornado.testing import AsyncTestCase, bind_unused_port
 from bonzo.server import SMTPServer
 
@@ -20,6 +21,10 @@ class AsyncSMTPTestCase(AsyncTestCase):
         self.smtp_server.add_sockets([sock])
 
     def get_smtp_server(self):
+        """Returns an instance of :class:`~.server.SMTPServer` that will be
+        used in the test case. It's inmediatelly called when the
+        :class:`~.testing.AsyncSMTPTestCase` is instanced.
+        """
         return SMTPServer(self._request_callback, io_loop=self.io_loop,
                           **self.get_smtpserver_options())
 
