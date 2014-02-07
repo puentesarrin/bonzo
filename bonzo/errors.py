@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""SMTP exceptions for reponse to the client."""
+"""SMTP exceptions for response to the client."""
+
 
 class SMTPError(Exception):
     """An exception that will turn into an SMTP error response.
@@ -27,8 +28,7 @@ class SMTPError(Exception):
 
 
 class InternalConfusion(SMTPError):
-    """A subclass of :class:`~errors.SMTPError` to be used to return a `451`
-    status code.
+    """Used to return a ``451`` status code.
     """
 
     def __init__(self):
@@ -36,8 +36,7 @@ class InternalConfusion(SMTPError):
 
 
 class UnrecognisedCommand(SMTPError):
-    """A subclass of :class:`~errors.SMTPError` to be used to return a `500`
-    status code.
+    """Used to return a ``500`` status code.
     """
 
     def __init__(self):
@@ -45,8 +44,7 @@ class UnrecognisedCommand(SMTPError):
 
 
 class BadArguments(SMTPError):
-    """A subclass of :class:`~errors.SMTPError` to be used to return a `501`
-    status code.
+    """Used to return a ``501`` status code.
 
     :arg string syntax: Syntax returned to the client.
     """
@@ -56,8 +54,7 @@ class BadArguments(SMTPError):
 
 
 class NotImplementedCommand(SMTPError):
-    """A subclass of :class:`~errors.SMTPError` to be used to return a `502`
-    status code.
+    """Used to return a ``502`` status code.
 
     :arg string command: Command not implemented for the server.
     """
@@ -68,11 +65,10 @@ class NotImplementedCommand(SMTPError):
 
 
 class BadSequence(SMTPError):
-    """A subclass of :class:`~errors.SMTPError` to be used to return a `503`
-    status code.
+    """Used to return a ``503`` status code.
 
-    :arg string message: Message to be written to the stream in order to
-    response to the client.
+    :arg string message: Message to be written to the stream and to response to
+        the client.
     """
 
     def __init__(self, message):

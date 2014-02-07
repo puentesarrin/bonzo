@@ -9,5 +9,5 @@ Next Release
 New modules
 ~~~~~~~~~~~
 
-- The :mod:`bonzo.errors` module provides custom exceptions to write error
+- The :mod:`bonzo.errors` module provides custom exceptions for writing error
   codes to the client.
