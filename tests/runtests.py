@@ -3,7 +3,7 @@ import os
 import sys
 from unittest import defaultTestLoader, TextTestRunner, TestSuite
 
-TESTS = ('server_test', 'errors_test')
+TESTS = ('init_test', 'server_test', 'errors_test')
 
 
 def make_suite(prefix='', extra=(), force_all=False):
