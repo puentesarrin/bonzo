@@ -2,12 +2,14 @@
 """A non-blocking, single-threaded SMTP server."""
 import email
 import functools
+import sys
 
 from tornado.escape import to_unicode, utf8
+from tornado.log import app_log, gen_log
 from tornado.tcpserver import TCPServer
 from tornado import stack_context
 
-from bonzo import version
+from bonzo import errors, version
 
 CRLF = '\r\n'
 
@@ -124,38 +126,58 @@ class SMTPConnection(object):
         self.close()
 
     def _on_commands(self, line):
-        line = to_unicode(line)
-        if self.__state == self.COMMAND:
-            if not line:
-                self.write('500 Error: bad syntax')
-                return
-            i = line.find(' ')
-            if i < 0:
-                raw_command = line.strip()
-                arg = None
-            else:
-                raw_command = line[:i].strip()
-                arg = line[i + 1:].strip()
-            method = getattr(self, 'command_' + raw_command.lower(), None)
-            if not method:
-                self.write('502 Error: command "%s" not implemented' %
-                           raw_command)
-                return
-            method(arg)
-        elif self.__state == self.DATA:
-            data = []
-            for text in line.split(CRLF):
-                if text and text[0] == '.':
-                    data.append(text[1:])
+        try:
+            line = to_unicode(line)
+            if self.__state == self.COMMAND:
+                if not line:
+                    raise errors.UnrecognisedCommand()
+                i = line.find(' ')
+                if i < 0:
+                    command = line.strip()
+                    arg = None
                 else:
-                    data.append(text)
-            self.__data = '\n'.join(data)
-            self.__rcpttos = []
-            self.__mailfrom = None
-            self.__state = self.COMMAND
-            self._on_data(self.__data)
+                    command = line[:i].strip()
+                    arg = line[i + 1:].strip()
+                method = getattr(self, 'command_' + command.lower(), None)
+                if not method:
+                    raise errors.NotImplementedCommand(command)
+                method(arg)
+            elif self.__state == self.DATA:
+                data = []
+                for text in line.split(CRLF):
+                    if text and text[0] == '.':
+                        data.append(text[1:])
+                    else:
+                        data.append(text)
+                self.__data = '\n'.join(data)
+                self.__rcpttos = []
+                self.__mailfrom = None
+                self.__state = self.COMMAND
+                self._on_data(self.__data)
+            else:
+                raise errors.InternalConfusion()
+        except Exception as e:
+            self._handle_request_exception(e)
+
+    def _request_summary(self):
+        return ''
+
+    def log_exception(self, typ, value, tb):
+        if isinstance(value, errors.SMTPError):
+            if value.log_message:
+                format = '%d %s' + value.log_message
+                args = ([value.status_code, self,_request_summary()] +
+                       list(value.args))
+                gen_log.warning(format, *args)
         else:
-            self.write('451 Internal confusion')
+            app_log.error('Uncaught exception %s', self._request_summary(), 
+                          exc_info=(typ, value, tb))
+
+    def _handle_request_exception(self, e):
+        self.log_exception(*sys.exc_info())
+        if not isinstance(e, errors.SMTPError):
+            e = errors.InternalConfusion()
+        self.write('%d %s' % (e.status_code, e.message))
 
     def __getaddr(self, keyword, arg):
         address = None
@@ -179,13 +201,11 @@ class SMTPConnection(object):
           already was received.
         """
         if not arg:
-            self.write('501 Syntax: HELO hostname')
-            return
+            raise errors.BadArguments('HELO hostname')
         if self.__greeting:
-            self.write('503 Duplicate HELO/EHLO')
-        else:
-            self.__greeting = arg
-            self.write('250 %s' % self.address[0])
+            raise errors.BadSequence('Duplicate HELO/EHLO')
+        self.__greeting = arg
+        self.write('250 %s' % self.address[0])
 
     def command_noop(self, arg):
         """Handles the ``NOOP`` SMTP command.
@@ -194,9 +214,8 @@ class SMTPConnection(object):
           received.
         """
         if arg:
-            self.write('501 Syntax: NOOP')
-        else:
-            self.write('250 Ok')
+            raise errors.BadArguments('NOOP')
+        self.write('250 Ok')
 
     def command_quit(self, arg):
         """Handles the ``QUIT`` SMTP command.
@@ -213,11 +232,9 @@ class SMTPConnection(object):
         """
         address = self.__getaddr('FROM:', arg) if arg else None
         if not address:
-            self.write('501 Syntax: MAIL FROM:<address>')
-            return
+            raise errors.BadArguments('MAIL FROM:<address>')
         if self.__mailfrom:
-            self.write('503 Error: nested MAIL command')
-            return
+            raise errors.BadSequence('Error: nested MAIL command')
         self.__mailfrom = address
         self.write('250 Ok')
 
@@ -230,12 +247,10 @@ class SMTPConnection(object):
           not received.
         """
         if not self.__mailfrom:
-            self.write('503 Error: need MAIL command')
-            return
+            raise errors.BadSequence('Error: need MAIL command')
         address = self.__getaddr('TO:', arg) if arg else None
         if not address:
-            self.write('501 Syntax: RCPT TO:<address>')
-            return
+            raise errors.BadArguments('RCPT TO:<address>')
         self.__rcpttos.append(address)
         self.write('250 Ok')
 
@@ -246,8 +261,7 @@ class SMTPConnection(object):
           received.
         """
         if arg:
-            self.write('501 Syntax: RSET')
-            return
+            raise errors.BadArguments('RSET')
         # Resets the sender, recipients, and data, but not the greeting
         self.__mailfrom = None
         self.__rcpttos = []
@@ -264,11 +278,9 @@ class SMTPConnection(object):
           received.
         """
         if not self.__rcpttos:
-            self.write('503 Error: need RCPT command')
-            return
+            raise errors.BadSequence('Error: need RCPT command')
         if arg:
-            self.write('501 Syntax: DATA')
-            return
+            raise errors.BadArguments('DATA')
         self.__state = self.DATA
         self.write('354 End data with <CR><LF>.<CR><LF>',
                    read_until_delimiter='{0}.{0}'.format(CRLF))

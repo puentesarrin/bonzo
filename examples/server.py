@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import tornado.ioloop
-import email
+import tornado.log
 
+import email
 import sys
 sys.path = ['..'] + sys.path
 
@@ -17,5 +18,6 @@ def receive_message(message):
 
 
 if __name__ == '__main__':
+    tornado.log.enable_pretty_logging()
     SMTPServer(receive_message).listen(2525)
     tornado.ioloop.IOLoop.instance().start()
