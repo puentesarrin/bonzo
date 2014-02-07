@@ -167,7 +167,7 @@ class SMTPConnection(object):
             if value.log_message:
                 _format = '%d %s' + value.log_message
                 args = ([value.status_code, self._request_summary()] +
-                       list(value.args))
+                        list(value.args))
                 gen_log.warning(_format, *args)
         else:
             app_log.error('Uncaught exception %s', self._request_summary(),
