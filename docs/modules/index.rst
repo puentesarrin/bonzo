@@ -17,3 +17,4 @@ Package Documentation
 
    server
    testing
+   errors
