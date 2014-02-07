@@ -165,12 +165,12 @@ class SMTPConnection(object):
     def log_exception(self, typ, value, tb):
         if isinstance(value, errors.SMTPError):
             if value.log_message:
-                format = '%d %s' + value.log_message
-                args = ([value.status_code, self,_request_summary()] +
+                _format = '%d %s' + value.log_message
+                args = ([value.status_code, self._request_summary()] +
                        list(value.args))
-                gen_log.warning(format, *args)
+                gen_log.warning(_format, *args)
         else:
-            app_log.error('Uncaught exception %s', self._request_summary(), 
+            app_log.error('Uncaught exception %s', self._request_summary(),
                           exc_info=(typ, value, tb))
 
     def _handle_request_exception(self, e):
@@ -195,9 +195,9 @@ class SMTPConnection(object):
     def command_helo(self, arg):
         """Handles the ``HELO`` SMTP command.
 
-        - Writes a ``501`` error code to the stream when the network name of
-          the connecting machine is not received.
-        - Writes a ``503`` error code to the stream when a ``HELO`` command
+        - Raises a :class:`~bonzo.errors.BadArguments` error code when the
+          network name of the connecting machine is not received.
+        - Raises a :class:`~bonzo.errors.BadSequence` when a ``HELO`` command
           already was received.
         """
         if not arg:
@@ -210,7 +210,7 @@ class SMTPConnection(object):
     def command_noop(self, arg):
         """Handles the ``NOOP`` SMTP command.
 
-        - Writes a ``501`` error code to the stream when an argument is not
+        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
           received.
         """
         if arg:
@@ -225,9 +225,9 @@ class SMTPConnection(object):
     def command_mail(self, arg):
         """Handles the ``MAIL`` SMTP command.
 
-        - Writes a ``501`` error code to the stream when the ``from`` address
+        - Raises a :class:`~bonzo.errors.BadArguments` when the ``from`` address
           is not received.
-        - Writes a ``503`` error code to the stream when a ``MAIL`` command
+        - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
           already was received.
         """
         address = self.__getaddr('FROM:', arg) if arg else None
@@ -241,10 +241,10 @@ class SMTPConnection(object):
     def command_rcpt(self, arg):
         """Handles the ``RCPT`` SMTP command.
 
-        - Writes a ``503`` error code to the stream when a ``MAIL`` command was
-          not previously received.
-        - Writes a ``501`` error code to the stream when the ``to`` address is
-          not received.
+        - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
+          was not previously received.
+        - Raises a :class:`~bonzo.errors.BadArguments` when the ``to`` address
+          is not received.
         """
         if not self.__mailfrom:
             raise errors.BadSequence('Error: need MAIL command')
@@ -257,7 +257,7 @@ class SMTPConnection(object):
     def command_rset(self, arg):
         """Handles the ``RSET`` SMTP command.
 
-        - Writes a ``501`` error code to the stream when an argument is not
+        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
           received.
         """
         if arg:
@@ -272,9 +272,9 @@ class SMTPConnection(object):
     def command_data(self, arg):
         """Handles the ``DATA`` SMTP command.
 
-        - Writes a ``503`` error code to the stream when a ``RCPT`` command was
-          not previously received.
-        - Writes a ``501`` error code to the stream when an argument is not
+        - Raises a :class:`~bonzo.errors.BadSequence` when a ``RCPT`` command
+          was not previously received.
+        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
           received.
         """
         if not self.__rcpttos:
