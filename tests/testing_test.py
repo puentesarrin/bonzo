@@ -13,10 +13,6 @@ def request_callback(message):
 
 class AsyncSMTPTestCaseWrapperTest(unittest.TestCase):
 
-    def setup(self):
-        self.request_callback = request_callback
-        super(AsyncSMTPTestCaseWrapperTest, self).setup()
-
     def test_request_callback(self):
         class Test(AsyncSMTPTestCase):
 

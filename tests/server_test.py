@@ -16,9 +16,6 @@ class SMTPServerTest(AsyncSMTPTestCase):
     def get_request_callback(self):
         return request_callback
 
-    def tearDown(self):
-        super(SMTPServerTest, self).tearDown()
-
     def connect(self, read_response=True):
         self.stream = IOStream(socket.socket(), io_loop=self.io_loop)
         self.stream.connect(('localhost', self.get_smtp_port()), self.stop)
