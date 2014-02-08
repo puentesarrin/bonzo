@@ -5,6 +5,8 @@ Next Release
 
 - Added Sphinx docs and ReadTheDocs.
 - :mod:`tornado.log` is used to log records from :mod:`bonzo.server`.
+- Improved test suite to cover the :mod:`bonzo.__init__` and
+  :mod:`bonzo.testing` modules.
 
 New modules
 ~~~~~~~~~~~

@@ -3,9 +3,9 @@
 import sys
 
 if sys.version_info[0] >= 3:
-    basestring_type = str
+    basestring_type = str  # pragma: no cover
 else:
-    basestring_type = basestring
+    basestring_type = basestring  # pragma: no cover
 
 
 version_tuple = (0, 1, 2, '+')
