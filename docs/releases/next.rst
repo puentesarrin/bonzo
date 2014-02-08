@@ -19,5 +19,8 @@ New modules
 
 - :class:`~bonzo.server.SMTPConnection` is raising the new exceptions
   from the :mod:`bonzo.errors` module on its ``command_`` methods.
+- Exceptions in request callbacks no longer silently pass, instead the
+  server returns an internal confusion error (``451``) to the client and the
+  exceptions are now logged for debugging.
 
 .. _ReadTheDocs: http://bonzo.readthedocs.org
