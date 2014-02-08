@@ -3,27 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Bonzo |release| documentation
-=============================
+Bonzo: SMTP Proxy built on top of Tornado
+=========================================
 
-.. image:: https://travis-ci.org/puentesarrin/bonzo.png
-   :target: https://travis-ci.org/puentesarrin/bonzo
-   :alt: Travis CI status
+.. image:: _static/bonzo_sigil.png
+   :align: center
+   :alt: John Bonham sigil three intersecting circles
 
-.. image:: https://coveralls.io/repos/puentesarrin/bonzo/badge.png
-   :target: https://coveralls.io/r/puentesarrin/bonzo
-   :alt: Coveralls status
+About
+-----
 
-.. image:: https://pypip.in/v/bonzo/badge.png
-   :target: https://pypi.python.org/pypi/bonzo
-   :alt: Latest PyPI version
+Bonzo is a Python SMTP Proxy. It's actually a port of Python's smtpd_ using
+the asynchronous network library of Tornado_.
 
-.. image:: https://pypip.in/d/bonzo/badge.png
-   :target: https://pypi.python.org/pypi/bonzo
-   :alt: Number of PyPI downloads
-
-Bonzo is a minimalistic Python SMTP server. It's really a port of Python's
-smtpd_ using the asynchronous network library of Tornado_.
+Bonzo is available under the |apache-license|_.
 
 Hello, world
 ------------
@@ -57,13 +50,6 @@ Or using last source:
 
    $ pip install git+https://github.com/puentesarrin/bonzo.git
 
-.. toctree::
-   :hidden:
-
-   modules/index
-   releases/index
-   contributors
-
 Indices and tables
 ==================
 
@@ -71,6 +57,23 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. note::
+
+   Logo credits: Image by Freakofnurture_ (Wikimedia user), released into the
+   public domain (|image-source|_).
+
+.. toctree::
+   :hidden:
+
+   modules/index
+   releases/index
+   contributors
+
 .. _pip: http://pypi.python.org/pypi/pip
 .. _smtpd: http://docs.python.org/library/smtpd.html
 .. _Tornado: http://tornadoweb.org
+.. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
+.. |apache-license| replace:: Apache Licence, Version 2.0
+.. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture
+.. _image-source: http://commons.wikimedia.org/wiki/File:Zoso_John_Bonham_sigil_three_intersecting_circles.svg
+.. |image-source| replace:: source
