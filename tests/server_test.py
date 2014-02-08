@@ -3,8 +3,8 @@ import socket
 
 from tornado.escape import utf8
 from tornado.iostream import IOStream
-from tornado.testing import LogTrapTestCase
-from bonzo import version
+from tornado.testing import ExpectLog, LogTrapTestCase
+from bonzo import errors, version
 from bonzo.testing import AsyncSMTPTestCase
 
 
@@ -27,13 +27,12 @@ class BaseSMTPServerTest(AsyncSMTPTestCase):
         del self.stream
 
 
-def request_callback(message):
-    pass
-
-
 class SMTPConnectionTest(BaseSMTPServerTest):
 
     def get_request_callback(self):
+
+        def request_callback(message):
+            pass
         return request_callback
 
     def test_welcome_connection(self):
@@ -232,28 +231,81 @@ class SMTPConnectionTest(BaseSMTPServerTest):
         self.close()
 
 
-def request_callback_raises_exception(message):
-    raise Exception('This is a custom exception')
-
-
-class SMTPServerTest(BaseSMTPServerTest, LogTrapTestCase):
+class SMTPServerTest(BaseSMTPServerTest):
 
     def get_request_callback(self):
-        return request_callback_raises_exception
+
+        def request_callback(message):
+            raise Exception('This is a custom exception')
+        return request_callback
 
     def test_internal_confusion(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            data = self.read_response()
-            self.assertEqual(data, b'250 Ok\r\n')
+            self.read_response()
         self.stream.write(b'DATA\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'354 End data with <CR><LF>.<CR><LF>\r\n')
+        self.read_response()
+        with ExpectLog('tornado.application', 'Uncaught exception'):
+            self.stream.write(b'This is a message\r\n.\r\n')
+            data = self.read_response()
+            self.assertEqual(data, b'451 Internal confusion\r\n')
+        self.close()
+
+
+class SMTPServerErrorTest(BaseSMTPServerTest):
+
+    def get_request_callback(self):
+        self.status_code = 452
+        self.message = 'Insufficient system storage'
+
+        def request_callback(message):
+            raise errors.SMTPError(self.status_code, self.message)
+        return request_callback
+
+    def test_logged_smtp_error(self):
+        self.connect()
+        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
+        self.read_response()
+        for address in ['mail@example.com', '<mail@example.com>']:
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
+            self.read_response()
+        self.stream.write(b'DATA\r\n')
+        self.read_response()
         self.stream.write(b'This is a message\r\n.\r\n')
         data = self.read_response()
-        self.assertEqual(data, b'451 Internal confusion\r\n')
+        self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,
+                                                   self.message)))
+        self.close()
+
+
+class SMTPServerErrorLogMessageTest(BaseSMTPServerTest):
+
+    def get_request_callback(self):
+        self.status_code = 452
+        self.message = 'Insufficient system storage'
+        self.log_message = 'This is a custom message to be logged'
+
+        def request_callback(message):
+            raise errors.SMTPError(self.status_code, self.message,
+                                   self.log_message)
+        return request_callback
+
+    def test_logged_smtp_error_with_message(self):
+        self.connect()
+        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
+        self.read_response()
+        for address in ['mail@example.com', '<mail@example.com>']:
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
+            self.read_response()
+        self.stream.write(b'DATA\r\n')
+        self.read_response()
+        with ExpectLog('tornado.general', r'.*%d %s' % (self.status_code,
+                                                        self.log_message)):
+            self.stream.write(b'This is a message\r\n.\r\n')
+            data = self.read_response()
+            self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,
+                                                       self.message)))
         self.close()
