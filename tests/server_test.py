@@ -48,6 +48,14 @@ class SMTPServerTest(AsyncSMTPTestCase):
                                         'implemented\r\n' % command))
         self.close()
 
+    def test_unrecognised_command(self):
+        self.connect()
+        for command in ['', '  ']:
+            self.stream.write(utf8('%s\r\n' % command))
+            data = self.read_response()
+            self.assertEqual(data, utf8('500 Error: bad syntax\r\n'))
+        self.close()
+
     def test_helo(self):
         self.connect()
         self.stream.write(b'HELO Client name\r\n')

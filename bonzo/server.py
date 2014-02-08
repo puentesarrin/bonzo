@@ -127,16 +127,16 @@ class SMTPConnection(object):
 
     def _on_commands(self, line):
         try:
-            line = to_unicode(line)
+            line = to_unicode(line)[:-2]
             if self.__state == self.COMMAND:
-                if not line:
+                if not line.strip():
                     raise errors.UnrecognisedCommand()
                 i = line.find(' ')
                 if i < 0:
-                    command = line.strip()
+                    command = line
                     arg = None
                 else:
-                    command = line[:i].strip()
+                    command = line[:i]
                     arg = line[i + 1:].strip()
                 method = getattr(self, 'command_' + command.lower(), None)
                 if not method:
