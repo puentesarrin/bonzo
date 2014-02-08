@@ -3,18 +3,12 @@ import socket
 
 from tornado.escape import utf8
 from tornado.iostream import IOStream
+from tornado.testing import LogTrapTestCase
 from bonzo import version
 from bonzo.testing import AsyncSMTPTestCase
 
 
-def request_callback(message):
-    pass
-
-
-class SMTPServerTest(AsyncSMTPTestCase):
-
-    def get_request_callback(self):
-        return request_callback
+class BaseSMTPServerTest(AsyncSMTPTestCase):
 
     def connect(self, read_response=True):
         self.stream = IOStream(socket.socket(), io_loop=self.io_loop)
@@ -31,6 +25,16 @@ class SMTPServerTest(AsyncSMTPTestCase):
     def close(self):
         self.stream.close()
         del self.stream
+
+
+def request_callback(message):
+    pass
+
+
+class SMTPConnectionTest(BaseSMTPServerTest):
+
+    def get_request_callback(self):
+        return request_callback
 
     def test_welcome_connection(self):
         self.connect(read_response=False)
@@ -225,4 +229,31 @@ class SMTPServerTest(AsyncSMTPTestCase):
         self.stream.write(b'DATA args\r\n')
         data = self.read_response()
         self.assertEqual(data, b'501 Syntax: DATA\r\n')
+        self.close()
+
+
+def request_callback_raises_exception(message):
+    raise Exception('This is a custom exception')
+
+
+class SMTPServerTest(BaseSMTPServerTest, LogTrapTestCase):
+
+    def get_request_callback(self):
+        return request_callback_raises_exception
+
+    def test_internal_confusion(self):
+        self.connect()
+        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
+        data = self.read_response()
+        self.assertEqual(data, b'250 Ok\r\n')
+        for address in ['mail@example.com', '<mail@example.com>']:
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
+            data = self.read_response()
+            self.assertEqual(data, b'250 Ok\r\n')
+        self.stream.write(b'DATA\r\n')
+        data = self.read_response()
+        self.assertEqual(data, b'354 End data with <CR><LF>.<CR><LF>\r\n')
+        self.stream.write(b'This is a message\r\n.\r\n')
+        data = self.read_response()
+        self.assertEqual(data, b'451 Internal confusion\r\n')
         self.close()

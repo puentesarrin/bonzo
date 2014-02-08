@@ -287,5 +287,5 @@ class SMTPConnection(object):
 
     def _on_data(self, data):
         message = email.message_from_string(data)
-        self.write("250 Ok")
         self.request_callback(message)
+        self.write("250 Ok")
