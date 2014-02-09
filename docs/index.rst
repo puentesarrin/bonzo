@@ -33,7 +33,7 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
        print(message)
 
    SMTPServer(receive_message).listen(2525)
-   IOLoop.instance().start()
+   IOLoop.current().start()
 
 Installation
 ============

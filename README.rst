@@ -25,21 +25,15 @@ Bonzo is a SMTP Server built on top of Tornado_.
 
 .. code-block:: python
 
-   import tornado.ioloop
-   import email
-
+   from tornado.ioloop import IOLoop
    from bonzo.server import SMTPServer
 
 
    def receive_message(message):
-       print "New received message: "
-       print "From: " + message['from']
-       print "Subject: " + message['subject']
-       for line in email.iterators.body_line_iterator(message):
-           print line
+       print(message)
 
    SMTPServer(receive_message).listen(25)
-   tornado.ioloop.IOLoop.instance().start()
+   IOLoop.current().start()
 
 Installation
 ============
