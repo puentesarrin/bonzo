@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Unit testing support for asynchronous code."""
+import socket
+
+from tornado.iostream import IOStream
 from tornado.testing import AsyncTestCase, bind_unused_port
 from bonzo.server import SMTPServer
 
@@ -46,6 +49,33 @@ class AsyncSMTPTestCase(AsyncTestCase):
         A new port is chosen for each test.
         """
         return self.__port
+
+    def connect(self, read_response=True):
+        """Creates a instance of :class:`~tornado.iostream.IOStream` for
+        reading and writing bytes to the opened socket on the SMTP server
+        address.
+
+        :arg bool read_response: Reads the response of the server immediately
+             after to establish connection. Useful to read the response and
+             discard the welcome message.
+        """
+        self.stream = IOStream(socket.socket(), io_loop=self.io_loop)
+        self.stream.connect(('localhost', self.get_smtp_port()), self.stop)
+        self.wait()
+        if read_response:
+            self.read_response()
+
+    def read_response(self):
+        """Reads the response of the stream.
+        """
+        self.stream.read_until(b'\r\n', self.stop)
+        return self.wait()
+
+    def close(self):
+        """Closes the stream.
+        """
+        self.stream.close()
+        del self.stream
 
     def tearDown(self):
         self.smtp_server.stop()

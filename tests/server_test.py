@@ -1,33 +1,11 @@
 # -*- coding: utf-8 -*-
-import socket
-
 from tornado.escape import utf8
-from tornado.iostream import IOStream
 from tornado.testing import ExpectLog, LogTrapTestCase
 from bonzo import errors, version
 from bonzo.testing import AsyncSMTPTestCase
 
 
-class BaseSMTPServerTest(AsyncSMTPTestCase):
-
-    def connect(self, read_response=True):
-        self.stream = IOStream(socket.socket(), io_loop=self.io_loop)
-        self.stream.connect(('localhost', self.get_smtp_port()), self.stop)
-        self.wait()
-        # If needed, read the response to discard the welcome message.
-        if read_response:
-            self.read_response()
-
-    def read_response(self):
-        self.stream.read_until(b'\r\n', self.stop)
-        return self.wait()
-
-    def close(self):
-        self.stream.close()
-        del self.stream
-
-
-class SMTPConnectionTest(BaseSMTPServerTest):
+class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
 
@@ -231,7 +209,7 @@ class SMTPConnectionTest(BaseSMTPServerTest):
         self.close()
 
 
-class SMTPServerTest(BaseSMTPServerTest):
+class SMTPServerTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
 
@@ -255,7 +233,7 @@ class SMTPServerTest(BaseSMTPServerTest):
         self.close()
 
 
-class SMTPServerErrorTest(BaseSMTPServerTest):
+class SMTPServerErrorTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
         self.status_code = 452
@@ -281,7 +259,7 @@ class SMTPServerErrorTest(BaseSMTPServerTest):
         self.close()
 
 
-class SMTPServerErrorLogMessageTest(BaseSMTPServerTest):
+class SMTPServerErrorLogMessageTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
         self.status_code = 452

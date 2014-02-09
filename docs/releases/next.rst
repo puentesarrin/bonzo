@@ -23,4 +23,11 @@ New modules
   server returns an internal confusion error (``451``) to the client and the
   exceptions are now logged for debugging.
 
+:mod:`bonzo.testing`
+~~~~~~~~~~~~~~~~~~~~
+
+- Added ``connect``, ``read_response``, and ``close`` methods to the
+  :class:`~bonzo.testing.AsyncSMTPTestCase` class. These methods are oriented
+  for ease to create tests to the SMTP server.
+
 .. _ReadTheDocs: http://bonzo.readthedocs.org
