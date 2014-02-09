@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from tornado.escape import utf8
-from tornado.testing import ExpectLog, LogTrapTestCase
+from tornado.testing import ExpectLog
 from bonzo import errors, version
 from bonzo.testing import AsyncSMTPTestCase
 
