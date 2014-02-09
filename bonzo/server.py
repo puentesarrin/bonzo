@@ -54,7 +54,7 @@ class SMTPConnection(object):
         self._clear_request_state()
         self._command_callback = stack_context.wrap(self._on_commands)
         self.stream.set_close_callback(self._on_connection_close)
-        self.write('220 %s Bonzo SMTP proxy %s' % (self.address[0], version))
+        self.write('220 %s Bonzo SMTP Server %s' % (self.address[0], version))
 
     def _clear_request_state(self):
         """Clears the per-request state.

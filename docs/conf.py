@@ -235,7 +235,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', project, project + ' Documentation', author, project,
-   'Minimalistic SMTP Proxy built on top of Tornado.', 'Miscellaneous'),
+   'SMTP Server built on top of Tornado.', 'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

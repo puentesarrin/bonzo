@@ -21,7 +21,7 @@ Bonzo
 About
 =====
 
-Bonzo is a minimalistic SMTP Proxy built on top of Tornado_.
+Bonzo is a SMTP Server built on top of Tornado_.
 
 .. code-block:: python
 

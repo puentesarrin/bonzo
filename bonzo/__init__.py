@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bonzo is a minimalistic SMTP Proxy built on top of Tornado."""
+"""Bonzo is a SMTP Server built on top of Tornado."""
 import sys
 
 if sys.version_info[0] >= 3:

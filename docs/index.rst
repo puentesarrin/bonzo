@@ -3,25 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Bonzo: SMTP Proxy built on top of Tornado
-=========================================
+Bonzo: SMTP Server built on top of Tornado
+==========================================
 
 .. image:: _static/bonzo_sigil.png
    :align: center
-   :alt: John Bonham sigil three intersecting circles
+   :alt: John Bonham's sigil three intersecting circles
 
 About
 -----
 
-Bonzo is a Python SMTP Proxy. It's actually a port of Python's smtpd_ using
-the asynchronous network library of Tornado_.
+Bonzo is a Python SMTP Server using the asynchronous network library of
+Tornado_. And it's actually a port of Python's smtpd_ module
 
 Bonzo is available under the |apache-license|_.
 
 Hello, world
 ------------
 
-Here is a simple “Hello, world” example SMTP server for Bonzo:
+Here is a simple "Hello, world" example SMTP server for Bonzo:
 
 .. code-block:: python
 
@@ -59,8 +59,8 @@ Indices and tables
 
 .. note::
 
-   Logo credits: Image by Freakofnurture_ (Wikimedia user), released into the
-   public domain (|image-source|_).
+   **Logo credits:** Image created by Freakofnurture_ (Wikimedia user),
+   released into the public domain (|image-source|_).
 
 .. toctree::
    :hidden:

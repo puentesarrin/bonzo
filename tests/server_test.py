@@ -16,7 +16,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_welcome_connection(self):
         self.connect(read_response=False)
         data = self.read_response()
-        self.assertEqual(data, utf8('220 127.0.0.1 Bonzo SMTP proxy %s\r\n' %
+        self.assertEqual(data, utf8('220 127.0.0.1 Bonzo SMTP Server %s\r\n' %
                                     version))
         self.close()
 
