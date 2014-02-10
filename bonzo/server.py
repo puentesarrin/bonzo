@@ -21,7 +21,7 @@ class SMTPServer(TCPServer):
     A server is defined by a request callback that takes an instance of
     :class:`~bonzo.server.SMTPRequest` as an argument.
 
-    A simple example server that handles the received message:
+    A simple example server that handles the request with the received message:
 
     .. code:: python
 
@@ -291,13 +291,14 @@ class SMTPConnection(object):
             raise errors.BadSequence('Error: need RCPT command')
         if arg:
             raise errors.BadArguments('DATA')
-        self._request._state = self._request.DATA_STATE
+        self._request.set_data_state()
         self.write('354 End data with <CR><LF>.<CR><LF>',
                    read_until_delimiter='{0}.{0}'.format(CRLF))
 
     def _on_data(self, data):
         self._request.data = data
         self.request_callback(self._request)
+        self._request.reset()
 
 
 class SMTPRequest(object):
@@ -341,17 +342,21 @@ class SMTPRequest(object):
     def __verify_state(self, command):
         return self.state == command
 
+    def set_data_state(self):
+        """Sets the request state as ``DATA``."""
+        self._state = self.DATA_STATE
+
     def state_is_command(self):
-        """Return ``true`` if the current request state is ``COMMAND``"""
+        """Return ``true`` if the current request state is ``COMMAND``."""
         return self.__verify_state(self.COMMAND_STATE)
 
     def state_is_data(self):
-        """Return ``true`` if the current request state is ``DATA``"""
+        """Return ``true`` if the current request state is ``DATA``."""
         return self.__verify_state(self.DATA_STATE)
 
     def reset(self):
         """Resets the SMTP request object. Useful to clean the request when a
-        ```RSET`` command is received or after a ``DATA`` command to except
+        ``RSET`` command is received or after a ``DATA`` command to except
         another mail message.
         """
         self._state = self.COMMAND_STATE

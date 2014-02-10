@@ -6,10 +6,10 @@ from tornado.ioloop import IOLoop
 from bonzo.server import SMTPServer
 
 
-def receive_message(message):
-    print(message)
-
+def handle_request(request):
+    print(request)
+    request.finish() 
 
 if __name__ == '__main__':
-    SMTPServer(receive_message).listen(2525)
+    SMTPServer(handle_request).listen(2525)
     IOLoop.current().start()
