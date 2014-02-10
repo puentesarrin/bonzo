@@ -9,15 +9,14 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
 
-        def request_callback(message):
-            pass
+        def request_callback(request):
+            request.finish()
         return request_callback
 
     def test_welcome_connection(self):
         self.connect(read_response=False)
         data = self.read_response()
-        self.assertEqual(data, utf8('220 127.0.0.1 Bonzo SMTP Server %s\r\n' %
-                                    version))
+        self.assertEqual(data, utf8('220 Bonzo SMTP Server %s\r\n' % version))
         self.close()
 
     def test_not_implemented_command(self):
@@ -41,7 +40,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.connect()
         self.stream.write(b'HELO Client name\r\n')
         data = self.read_response()
-        self.assertEqual(data, b'250 127.0.0.1\r\n')
+        self.assertEqual(data, b'250 Hello 127.0.0.1\r\n')
         self.close()
 
     def test_helo_without_hostname(self):
@@ -55,7 +54,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.connect()
         self.stream.write(b'HELO NameClient\r\n')
         data = self.read_response()
-        self.assertEqual(data, b'250 127.0.0.1\r\n')
+        self.assertEqual(data, b'250 Hello 127.0.0.1\r\n')
         self.stream.write(b'HELO NameClient\r\n')
         data = self.read_response()
         self.assertEqual(data, b'503 Duplicate HELO/EHLO\r\n')
@@ -209,11 +208,42 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.close()
 
 
+class SMTPRequestTest(AsyncSMTPTestCase):
+
+    def get_request_callback(self):
+        self.mail = 'mail@example.com'
+        self.rcpt = ['mail@example.com', 'anothermail@example.com']
+        self.data = 'This is a message.'
+        self.request = None
+
+        def request_callback(request):
+            self.request = request
+            request.finish()
+        return request_callback
+
+    def test_request_object(self):
+        self.connect()
+        self.stream.write(utf8('MAIL FROM:%s\r\n' % self.mail))
+        self.read_response()
+        for address in self.rcpt:
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
+            self.read_response()
+        self.stream.write(b'DATA\r\n')
+        self.read_response()
+        self.stream.write(utf8('%s\r\n.\r\n' % self.data))
+        data = self.read_response()
+        self.assertEqual(data, b'250 Ok\r\n')
+        self.assertEqual(self.request.mail, self.mail)
+        self.assertEqual(self.request.rcpt, self.rcpt)
+        self.assertEqual(self.request.data, self.data)
+        self.close()
+
+
 class SMTPServerTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
 
-        def request_callback(message):
+        def request_callback(request):
             raise Exception('This is a custom exception')
         return request_callback
 
@@ -266,7 +296,7 @@ class SMTPServerErrorLogMessageTest(AsyncSMTPTestCase):
         self.message = 'Insufficient system storage'
         self.log_message = 'This is a custom message to be logged'
 
-        def request_callback(message):
+        def request_callback(request):
             raise errors.SMTPError(self.status_code, self.message,
                                    self.log_message)
         return request_callback

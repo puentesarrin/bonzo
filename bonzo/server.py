@@ -2,6 +2,7 @@
 """A non-blocking, single-threaded SMTP server."""
 import email
 import functools
+import socket
 import sys
 
 from tornado.escape import to_unicode, utf8
@@ -17,8 +18,23 @@ CRLF = '\r\n'
 class SMTPServer(TCPServer):
     """A non-blocking, single-threaded SMTP server.
 
-    A server is defined by a request callback that takes an email as an
-    argument.
+    A server is defined by a request callback that takes an instance of
+    :class:`~bonzo.server.SMTPRequest` as an argument.
+
+    A simple example server that handles the received message:
+
+    .. code:: python
+
+        from tornado.ioloop import IOLoop
+        from bonzo.server import SMTPServer
+
+        def handle_request(request):
+            do_something_with_the_message(request.message)
+            request.finish()
+
+        smtp_server = SMTPServer(handle_request)
+        smtp_server.listen()
+        IOLoop().current().start()
     """
 
     def __init__(self, request_callback, io_loop=None, **kwargs):
@@ -26,7 +42,7 @@ class SMTPServer(TCPServer):
         TCPServer.__init__(self, io_loop=io_loop, **kwargs)
 
     def handle_stream(self, stream, address):
-        """Handle the stream by executing the request callback.
+        """Handles the stream by executing the request callback.
         """
         SMTPConnection(stream, address, self.request_callback)
 
@@ -38,23 +54,19 @@ class SMTPConnection(object):
     simple "enum" to manage the connection state.
     """
 
-    COMMAND = 0
-    """Used to set the state to receive any command."""
-    DATA = 1
-    """Used to set the state to receive data."""
-
     def __init__(self, stream, address, request_callback):
         self.stream = stream
         self.address = address
         self.request_callback = request_callback
-        self.__state = self.COMMAND
-        self.__greeting = 0
-        self.__mailfrom = None
-        self.__rcpttos = []
+        if self.stream.socket.family in (socket.AF_INET, socket.AF_INET6):
+            ip = self.address[0]
+        else:
+            ip = '0.0.0.0'
+        self._request = SMTPRequest(self, ip)
         self._clear_request_state()
         self._command_callback = stack_context.wrap(self._on_commands)
         self.stream.set_close_callback(self._on_connection_close)
-        self.write('220 %s Bonzo SMTP Server %s' % (self.address[0], version))
+        self.write('220 Bonzo SMTP Server %s' % version)
 
     def _clear_request_state(self):
         """Clears the per-request state.
@@ -64,7 +76,7 @@ class SMTPConnection(object):
         and when the connection is closed (to break up cycles and
         facilitate garbage collection in cpython).
         """
-        self._request = None
+        self._request.reset()
         self._request_finished = False
         self._write_callback = None
         self._close_callback = None
@@ -80,7 +92,6 @@ class SMTPConnection(object):
             self._close_callback = None
             callback()
         # Delete any unfinished callbacks to break up reference cycles.
-        self._header_callback = None
         self._clear_request_state()
 
     def close(self):
@@ -89,7 +100,6 @@ class SMTPConnection(object):
         self.stream.close()
         # Remove this reference to self, which would otherwise cause a
         # cycle and delay garbage collection of this connection.
-        self._header_callback = None
         self._clear_request_state()
 
     def write(self, chunk, callback=None, read_until_delimiter=CRLF):
@@ -101,6 +111,13 @@ class SMTPConnection(object):
                                              self._on_commands)
             self._write_callback = stack_context.wrap(callback)
             self.stream.write(utf8(chunk + CRLF), self._on_write_complete)
+
+    def write_ok(self, message='Ok', callback=None, read_until_delimiter=CRLF):
+        """Writes a successfully message to the output by sending a ``250``
+        status code.
+        """
+        self.write('%s %s' % (250, message), callback=callback,
+                   read_until_delimiter=read_until_delimiter)
 
     def finish(self):
         """Finishes the request."""
@@ -127,8 +144,8 @@ class SMTPConnection(object):
 
     def _on_commands(self, line):
         try:
-            line = to_unicode(line)[:-2]
-            if self.__state == self.COMMAND:
+            if self._request.state_is_command():
+                line = to_unicode(line)[:-2]  # Remove delimiter '\r\n'
                 if not line.strip():
                     raise errors.UnrecognisedCommand()
                 i = line.find(' ')
@@ -142,18 +159,15 @@ class SMTPConnection(object):
                 if not method:
                     raise errors.NotImplementedCommand(command)
                 method(arg)
-            elif self.__state == self.DATA:
+            elif self._request.state_is_data():
+                line = to_unicode(line)[:-5]  # Remove delimiter '\r\n.\r\n'
                 data = []
                 for text in line.split(CRLF):
                     if text and text[0] == '.':
                         data.append(text[1:])
                     else:
                         data.append(text)
-                self.__data = '\n'.join(data)
-                self.__rcpttos = []
-                self.__mailfrom = None
-                self.__state = self.COMMAND
-                self._on_data(self.__data)
+                self._on_data('\n'.join(data))
             else:
                 raise errors.InternalConfusion()
         except Exception as e:
@@ -202,10 +216,10 @@ class SMTPConnection(object):
         """
         if not arg:
             raise errors.BadArguments('HELO hostname')
-        if self.__greeting:
+        if self._request.hostname:
             raise errors.BadSequence('Duplicate HELO/EHLO')
-        self.__greeting = arg
-        self.write('250 %s' % self.address[0])
+        self._request.hostname = arg
+        self.write('250 Hello %s' % self._request.ip)
 
     def command_noop(self, arg):
         """Handles the ``NOOP`` SMTP command.
@@ -215,7 +229,7 @@ class SMTPConnection(object):
         """
         if arg:
             raise errors.BadArguments('NOOP')
-        self.write('250 Ok')
+        self.write_ok()
 
     def command_quit(self, arg):
         """Handles the ``QUIT`` SMTP command.
@@ -233,10 +247,10 @@ class SMTPConnection(object):
         address = self.__getaddr('FROM:', arg) if arg else None
         if not address:
             raise errors.BadArguments('MAIL FROM:<address>')
-        if self.__mailfrom:
+        if self._request.mail:
             raise errors.BadSequence('Error: nested MAIL command')
-        self.__mailfrom = address
-        self.write('250 Ok')
+        self._request.mail = address
+        self.write_ok()
 
     def command_rcpt(self, arg):
         """Handles the ``RCPT`` SMTP command.
@@ -246,13 +260,13 @@ class SMTPConnection(object):
         - Raises a :class:`~bonzo.errors.BadArguments` when the ``to`` address
           is not received.
         """
-        if not self.__mailfrom:
+        if not self._request.mail:
             raise errors.BadSequence('Error: need MAIL command')
         address = self.__getaddr('TO:', arg) if arg else None
         if not address:
             raise errors.BadArguments('RCPT TO:<address>')
-        self.__rcpttos.append(address)
-        self.write('250 Ok')
+        self._request.rcpt.append(address)
+        self.write_ok()
 
     def command_rset(self, arg):
         """Handles the ``RSET`` SMTP command.
@@ -262,12 +276,8 @@ class SMTPConnection(object):
         """
         if arg:
             raise errors.BadArguments('RSET')
-        # Resets the sender, recipients, and data, but not the greeting
-        self.__mailfrom = None
-        self.__rcpttos = []
-        self.__data = ''
-        self.__state = self.COMMAND
-        self.write('250 Ok')
+        self._request.reset()
+        self.write_ok()
 
     def command_data(self, arg):
         """Handles the ``DATA`` SMTP command.
@@ -277,15 +287,83 @@ class SMTPConnection(object):
         - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
           received.
         """
-        if not self.__rcpttos:
+        if not self._request.rcpt:
             raise errors.BadSequence('Error: need RCPT command')
         if arg:
             raise errors.BadArguments('DATA')
-        self.__state = self.DATA
+        self._request._state = self._request.DATA_STATE
         self.write('354 End data with <CR><LF>.<CR><LF>',
                    read_until_delimiter='{0}.{0}'.format(CRLF))
 
     def _on_data(self, data):
-        message = email.message_from_string(data)
-        self.request_callback(message)
-        self.write("250 Ok")
+        self._request.data = data
+        self.request_callback(self._request)
+
+
+class SMTPRequest(object):
+    """A single SMTP request.
+    """
+
+    COMMAND_STATE = 0
+    """Used to set the state to receive any command."""
+    DATA_STATE = 1
+    """Used to set the state to receive data."""
+
+    def __init__(self, connection, ip, **kwargs):
+        self.connection = connection
+        self.ip = ip
+        self._state = self.COMMAND_STATE
+        self.hostname = kwargs.get('hostname', None)
+        self.mail = kwargs.get('mail', None)
+        self.rcpt = kwargs.get('rcpt', [])
+        self.data = kwargs.get('data', None)
+
+    @property
+    def state(self):
+        """Current state of the request."""
+        return self._state
+
+    @property
+    def message(self):
+        """Returns an instance of a subclass from the
+        :class:`email.mime.base.MIMEBase` class. It's actually parsed from the
+        data received.
+        """
+        if not hasattr(self, '_message'):
+            self._message = email.message_from_string(self.data)
+        self._message
+
+    @property
+    def command(self):
+        """Current executed command of the request."""
+        return self._command
+
+    def __verify_state(self, command):
+        return self.state == command
+
+    def state_is_command(self):
+        """Return ``true`` if the current request state is ``COMMAND``"""
+        return self.__verify_state(self.COMMAND_STATE)
+
+    def state_is_data(self):
+        """Return ``true`` if the current request state is ``DATA``"""
+        return self.__verify_state(self.DATA_STATE)
+
+    def reset(self):
+        """Resets the SMTP request object. Useful to clean the request when a
+        ```RSET`` command is received or after a ``DATA`` command to except
+        another mail message.
+        """
+        self._state = self.COMMAND_STATE
+        self.mail = None
+        self.rcpt = []
+        self.data = None
+
+    def finish(self):
+        """Writes to the connection a successfully message."""
+        self.connection.write_ok()
+
+    def __repr__(self):
+        attrs = ('state', 'hostname', 'mail', 'rcpt')
+        args = ', '.join(["%s=%r" % (n, getattr(self, n)) for n in attrs])
+        return '%s (%s)' % (self.__class__.__name__, args)

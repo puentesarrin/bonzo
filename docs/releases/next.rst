@@ -19,6 +19,14 @@ New modules
 
 - :class:`~bonzo.server.SMTPConnection` is raising the new exceptions
   from the :mod:`bonzo.errors` module on its ``command_`` methods.
+- Added :class:`~bonzo.server.SMTPRequest` for manage the request arguments,
+  an instance of this class is passed as argumento to the request callback.
+- Request callback receives an instance of :class:`~bonzo.server.SMTPRequest`
+  now. The message can be found on the :attr:`~bonzo.server.SMTPRequest.message`
+  atribute.
+- Request callbacks should call to the :meth:`~bonzo.SMTPRequest.finish` method
+  in order to finish the request by sending a successfully message to the
+  client.
 - Exceptions in request callbacks no longer silently pass, instead the
   server returns an internal confusion error (``451``) to the client and the
   exceptions are now logged for debugging.
