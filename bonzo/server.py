@@ -298,7 +298,6 @@ class SMTPConnection(object):
     def _on_data(self, data):
         self._request.data = data
         self.request_callback(self._request)
-        self._request.reset()
 
 
 class SMTPRequest(object):
@@ -366,6 +365,7 @@ class SMTPRequest(object):
 
     def finish(self):
         """Writes to the connection a successfully message."""
+        self.reset()
         self.connection.write_ok()
 
     def __repr__(self):
