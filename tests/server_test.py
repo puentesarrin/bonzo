@@ -214,10 +214,14 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.mail = 'mail@example.com'
         self.rcpt = ['mail@example.com', 'anothermail@example.com']
         self.data = 'This is a message.'
-        self.request = None
+        self.request_mail = None
+        self.request_rcpt = None
+        self.request_data = None
 
         def request_callback(request):
-            self.request = request
+            self.request_mail = request.mail
+            self.request_rcpt = request.rcpt
+            self.request_data = request.data
             request.finish()
         return request_callback
 
@@ -233,9 +237,9 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.stream.write(utf8('%s\r\n.\r\n' % self.data))
         data = self.read_response()
         self.assertEqual(data, b'250 Ok\r\n')
-        self.assertEqual(self.request.mail, self.mail)
-        self.assertEqual(self.request.rcpt, self.rcpt)
-        self.assertEqual(self.request.data, self.data)
+        self.assertEqual(self.mail, self.request_mail)
+        self.assertEqual(self.rcpt, self.request_rcpt)
+        self.assertEqual(self.data, self.request_data)
         self.close()
 
 
