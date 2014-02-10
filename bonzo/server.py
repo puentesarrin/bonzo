@@ -365,7 +365,8 @@ class SMTPRequest(object):
 
     def finish(self):
         """Writes to the connection a successfully message."""
-        self.reset()
+        if self.state == self.DATA_STATE:
+            self.reset()
         self.connection.write_ok()
 
     def __repr__(self):
