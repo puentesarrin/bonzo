@@ -61,7 +61,8 @@ class SMTPConnection(object):
         if self.stream.socket.family in (socket.AF_INET, socket.AF_INET6):
             ip = self.address[0]
         else:
-            ip = '0.0.0.0'
+            # Unix (or other) socket; fake the remote address
+            ip = '0.0.0.0'  # pragma: no cover
         self._request = SMTPRequest(self, ip)
         self._clear_request_state()
         self._command_callback = stack_context.wrap(self._on_commands)
