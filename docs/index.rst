@@ -29,10 +29,11 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
    from bonzo.server import SMTPServer
 
 
-   def receive_message(message):
-       print(message)
+   def handle_request(request):
+       print(request.message)
+       request.finish()
 
-   SMTPServer(receive_message).listen(2525)
+   SMTPServer(handle_request).listen(2525)
    IOLoop.current().start()
 
 Installation
