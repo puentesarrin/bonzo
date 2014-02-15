@@ -49,8 +49,8 @@ class MessageHandler(object):
         :class:`~bonzo.server.SMTPServer` constructor.  For advanced uses
         (e.g. multi-process mode), do not use this method; create an
         :class:`~bonzo.server.SMTPServer` and call its
-        :meth:`tornado.tcpserver.TCPServer.bind`/
-        :meth:`tornado.tcpserver.TCPServer.start` methods directly.
+        :meth:`~tornado.tcpserver.TCPServer.bind`/
+        :meth:`~tornado.tcpserver.TCPServer.start` methods directly.
 
         Note that after calling this method you still need to call
         ``IOLoop.current().start()`` to start the server.

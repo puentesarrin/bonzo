@@ -25,7 +25,7 @@ New modules
   an instance of this class is passed as argument to the request callback.
 - Request callback receives an instance of :class:`~bonzo.server.SMTPRequest`
   now. The message can be found on the :attr:`~bonzo.server.SMTPRequest.message`
-  atribute.
+  attribute of the request.
 - Request callbacks should call to the :meth:`~bonzo.server.SMTPRequest.finish`
   method in order to finish the request by sending a successfully message to the
   client.
