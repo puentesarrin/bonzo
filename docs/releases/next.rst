@@ -12,7 +12,7 @@ New modules
 ~~~~~~~~~~~
 
 - The :mod:`bonzo.handlers` module provides a better way to handles messages,
-  this module is created to support asynchronous code.
+  this module is created to support asynchronous code in the request callback.
 - The :mod:`bonzo.errors` module provides custom exceptions for writing error
   codes to the client.
 

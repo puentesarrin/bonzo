@@ -7,7 +7,7 @@ from bonzo import errors
 
 
 class MessageHandler(object):
-    """Subclass this class and define `data()` to make a handler.
+    """Subclass this class and define ``data()`` to make a handler.
 
     Instances of this class are callable and can be passed directly to
     SMTPServer to handle messages:
@@ -44,13 +44,13 @@ class MessageHandler(object):
 
         This is a convenience alias for creating an
         :class:`~bonzo.server.SMTPServer` object and calling its listen method.
-        Keyword arguments not supported by `SMTPServer.listen
+        Keyword arguments not supported by :meth:`bonzo.server.SMTPServer.listen
         <tornado.tcpserver.TCPServer.listen>` are passed to the
         :class:`~bonzo.server.SMTPServer` constructor.  For advanced uses
         (e.g. multi-process mode), do not use this method; create an
         :class:`~bonzo.server.SMTPServer` and call its
-        `tornado.tcpserver.TCPServer.bind`/`tornado.tcpserver.TCPServer.start`
-        methods directly.
+        :meth:`tornado.tcpserver.TCPServer.bind`/
+        :meth:`tornado.tcpserver.TCPServer.start` methods directly.
 
         Note that after calling this method you still need to call
         ``IOLoop.current().start()`` to start the server.
