@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import email
-
 from tornado.escape import utf8
 from tornado.testing import ExpectLog
 from bonzo import errors, version
@@ -219,7 +217,6 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.request_mail = None
         self.request_rcpt = None
         self.request_data = None
-        self.request_message = None
         super(SMTPRequestTest, self).setUp()
 
     def get_request_callback(self):
@@ -228,7 +225,6 @@ class SMTPRequestTest(AsyncSMTPTestCase):
             self.request_mail = request.mail
             self.request_rcpt = request.rcpt
             self.request_data = request.data
-            self.request_message = request.message
             request.finish()
         return request_callback
 
@@ -247,8 +243,6 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.assertEqual(self.mail, self.request_mail)
         self.assertEqual(self.rcpt, self.request_rcpt)
         self.assertEqual(self.data, self.request_data)
-        self.assertEqual(str(self.request_message),
-                         str(email.message_from_string(self.data)))
         self.close()
 
 

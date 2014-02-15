@@ -24,7 +24,6 @@ class HandlerSMTPRequestTest(server_test.SMTPRequestTest):
                 self.request_mail = request.mail
                 self.request_rcpt = request.rcpt
                 self.request_data = request.data
-                self.request_message = request.message
 
         return Handler()
 
