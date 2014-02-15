@@ -16,5 +16,6 @@ Package Documentation
    :maxdepth: 4
 
    server
+   handlers
    testing
    errors

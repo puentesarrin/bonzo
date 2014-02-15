@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Tools for handling requests with asynchronous features."""
 import functools
 
 from tornado.concurrent import Future
@@ -39,6 +40,21 @@ class MessageHandler(object):
             autoreload.start()
 
     def listen(self, port, address='', **kwargs):
+        """Starts an SMTP server for this handler on the given port.
+
+        This is a convenience alias for creating an
+        :class:`~bonzo.server.SMTPServer` object and calling its listen method.
+        Keyword arguments not supported by `SMTPServer.listen
+        <tornado.tcpserver.TCPServer.listen>` are passed to the
+        :class:`~bonzo.server.SMTPServer` constructor.  For advanced uses
+        (e.g. multi-process mode), do not use this method; create an
+        :class:`~bonzo.server.SMTPServer` and call its
+        `tornado.tcpserver.TCPServer.bind`/`tornado.tcpserver.TCPServer.start`
+        methods directly.
+
+        Note that after calling this method you still need to call
+        ``IOLoop.current().start()`` to start the server.
+        """
         from bonzo.server import SMTPServer
         server = SMTPServer(self, **kwargs)
         server.listen(port, address)
