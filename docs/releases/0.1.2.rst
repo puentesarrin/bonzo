@@ -3,6 +3,7 @@ Release Notes for Bonzo 0.1.2
 
 *February 04, 2014*
 
+- ``bonzo.smtpserver`` module is renamed to :mod:`bonzo.server`.
 - Added Python 3 support.
 - Added Travis and Coveralls configuration (Issue :issue:`#1 <1>`). Thanks to
   Luis Mayta.
