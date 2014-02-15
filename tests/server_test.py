@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import email
+
 from tornado.escape import utf8
 from tornado.testing import ExpectLog
 from bonzo import errors, version
@@ -210,18 +212,23 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
 class SMTPRequestTest(AsyncSMTPTestCase):
 
-    def get_request_callback(self):
+    def setUp(self):
         self.mail = 'mail@example.com'
         self.rcpt = ['mail@example.com', 'anothermail@example.com']
         self.data = 'This is a message.'
         self.request_mail = None
         self.request_rcpt = None
         self.request_data = None
+        self.request_message = None
+        super(SMTPRequestTest, self).setUp()
+
+    def get_request_callback(self):
 
         def request_callback(request):
             self.request_mail = request.mail
             self.request_rcpt = request.rcpt
             self.request_data = request.data
+            self.request_message = request.message
             request.finish()
         return request_callback
 
@@ -240,6 +247,8 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.assertEqual(self.mail, self.request_mail)
         self.assertEqual(self.rcpt, self.request_rcpt)
         self.assertEqual(self.data, self.request_data)
+        self.assertEqual(str(self.request_message),
+                         str(email.message_from_string(self.data)))
         self.close()
 
 
@@ -269,10 +278,12 @@ class SMTPServerTest(AsyncSMTPTestCase):
 
 class SMTPServerErrorTest(AsyncSMTPTestCase):
 
-    def get_request_callback(self):
+    def setUp(self):
         self.status_code = 452
         self.message = 'Insufficient system storage'
+        super(SMTPServerErrorTest, self).setUp()
 
+    def get_request_callback(self):
         def request_callback(message):
             raise errors.SMTPError(self.status_code, self.message)
         return request_callback
@@ -295,11 +306,13 @@ class SMTPServerErrorTest(AsyncSMTPTestCase):
 
 class SMTPServerErrorLogMessageTest(AsyncSMTPTestCase):
 
-    def get_request_callback(self):
+    def setUp(self):
         self.status_code = 452
         self.message = 'Insufficient system storage'
         self.log_message = 'This is a custom message to be logged'
+        super(SMTPServerErrorLogMessageTest, self).setUp()
 
+    def get_request_callback(self):
         def request_callback(request):
             raise errors.SMTPError(self.status_code, self.message,
                                    self.log_message)

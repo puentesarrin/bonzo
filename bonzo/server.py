@@ -309,9 +309,9 @@ class SMTPConnection(object):
 
     def _on_data(self, data):
         self.__data = data
-        request = SMTPRequest(self, self.remote_ip, hostname=self.__hostname,
-                              mail=self.__mail, rcpt=self.__rcpt,
-                              data=self.__data)
+        request = SMTPRequest(self, self.remote_ip, 'DATA',
+                              hostname=self.__hostname, mail=self.__mail,
+                              rcpt=self.__rcpt, data=self.__data)
         self.request_callback(request)
 
 
@@ -319,10 +319,11 @@ class SMTPRequest(object):
     """A single SMTP request.
     """
 
-    def __init__(self, connection, ip, hostname=None, mail=None, rcpt=[],
-                 data=None):
+    def __init__(self, connection, remote_ip, command, hostname=None, mail=None,
+                 rcpt=[], data=None):
         self.connection = connection
-        self.ip = ip
+        self.remote_ip = remote_ip
+        self.command = command
         self.hostname = hostname
         self.mail = mail
         self.rcpt = rcpt
@@ -336,12 +337,7 @@ class SMTPRequest(object):
         """
         if not hasattr(self, '_message'):
             self._message = email.message_from_string(self.data)
-        self._message
-
-    @property
-    def command(self):
-        """Current executed command of the request."""
-        return self._command
+        return self._message
 
     def finish(self):
         """Writes to the connection a successfully message."""
