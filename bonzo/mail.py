@@ -3,7 +3,6 @@
 import functools
 
 from tornado.concurrent import Future
-from bonzo import errors
 
 
 class MessageHandler(object):
