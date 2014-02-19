@@ -34,7 +34,7 @@ class SMTPServer(TCPServer):
 
         smtp_server = SMTPServer(handle_request)
         smtp_server.listen()
-        IOLoop().current().start()
+        IOLoop.current().start()
     """
 
     def __init__(self, request_callback, io_loop=None, **kwargs):
