@@ -16,6 +16,6 @@ Package Documentation
    :maxdepth: 4
 
    server
-   handlers
+   mail
    testing
    errors

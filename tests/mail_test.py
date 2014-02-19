@@ -2,7 +2,7 @@
 from tornado.escape import utf8
 from tornado.testing import ExpectLog
 from bonzo import errors
-from bonzo.handlers import MessageHandler
+from bonzo.mail import MessageHandler
 from bonzo.testing import AsyncSMTPTestCase
 
 from tests import server_test

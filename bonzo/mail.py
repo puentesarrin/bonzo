@@ -16,7 +16,7 @@ class MessageHandler(object):
 
        from tornado import ioloop
        from bonzo import server
-       from bonzo.handlers import MessageHandler
+       from bonzo.mail import MessageHandler
 
 
        class Handler(MessageHandler):
