@@ -26,7 +26,7 @@ class MessageHandler(object):
 
        smtp_server = server.SMTPServer(Handler())
        smtp_server.listen(2525)
-       ioloop.IOLoop().current().start()
+       ioloop.IOLoop.current().start()
     """
 
     def __init__(self, **settings):
