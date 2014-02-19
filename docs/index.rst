@@ -14,9 +14,23 @@ About
 -----
 
 Bonzo is a Python SMTP Server using the asynchronous network library of
-Tornado_. And it's actually a port of Python's smtpd_ module
+Tornado_. And it's actually a port of Python's smtpd_ module.
 
-Bonzo is available under the |apache-license|_.
+.. image:: https://travis-ci.org/puentesarrin/bonzo.png
+   :target: https://travis-ci.org/puentesarrin/bonzo
+   :alt: Travis CI status
+
+.. image:: https://coveralls.io/repos/puentesarrin/bonzo/badge.png
+   :target: https://coveralls.io/r/puentesarrin/bonzo
+   :alt: Coveralls status
+
+.. image:: https://pypip.in/v/bonzo/badge.png
+   :target: https://pypi.python.org/pypi/bonzo
+   :alt: Latest PyPI version
+
+.. image:: https://pypip.in/d/bonzo/badge.png
+   :target: https://pypi.python.org/pypi/bonzo
+   :alt: Number of PyPI downloads
 
 Hello, world
 ------------
@@ -51,6 +65,11 @@ Or using last source:
 
    $ pip install git+https://github.com/puentesarrin/bonzo.git
 
+License
+=======
+
+Bonzo is available under the |apache-license|_.
+
 Indices and tables
 ==================
 
@@ -70,11 +89,11 @@ Indices and tables
    releases/index
    contributors
 
-.. _pip: http://pypi.python.org/pypi/pip
-.. _smtpd: http://docs.python.org/library/smtpd.html
 .. _Tornado: http://tornadoweb.org
+.. _smtpd: http://docs.python.org/library/smtpd.html
+.. _pip: http://pypi.python.org/pypi/pip
 .. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
-.. |apache-license| replace:: Apache Licence, Version 2.0
+.. |apache-license| replace:: Apache License, Version 2.0
 .. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture
 .. _image-source: http://commons.wikimedia.org/wiki/File:Zoso_John_Bonham_sigil_three_intersecting_circles.svg
 .. |image-source| replace:: source

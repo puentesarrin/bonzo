@@ -10,9 +10,7 @@ About
 =====
 
 Bonzo is a Python SMTP Server using the asynchronous network library of
-Tornado_. And it's actually a port of Python's smtpd_ module
-
-Bonzo is a SMTP Server built on top of Tornado_.
+Tornado_. And it's actually a port of Python's smtpd_ module.
 
 .. image:: https://travis-ci.org/puentesarrin/bonzo.png
    :target: https://travis-ci.org/puentesarrin/bonzo
@@ -21,7 +19,7 @@ Bonzo is a SMTP Server built on top of Tornado_.
 .. image:: https://coveralls.io/repos/puentesarrin/bonzo/badge.png
    :target: https://coveralls.io/r/puentesarrin/bonzo
    :alt: Coveralls status
-   
+
 .. image:: https://pypip.in/v/bonzo/badge.png
    :target: https://pypi.python.org/pypi/bonzo
    :alt: Latest PyPI version
@@ -66,8 +64,16 @@ License
 
 Bonzo is available under the |apache-license|_.
 
+.. note::
+
+   **Logo credits:** Image created by Freakofnurture_ (Wikimedia user),
+   released into the public domain (|image-source|_).
+
 .. _Tornado: http://tornadoweb.org
-.. _pip: http://pypi.python.org/pypi/pip
 .. _smtpd: http://docs.python.org/library/smtpd.html
+.. _pip: http://pypi.python.org/pypi/pip
 .. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
-.. |apache-license| replace:: Apache Licence, Version 2.0
+.. |apache-license| replace:: Apache License, Version 2.0
+.. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture
+.. _image-source: http://commons.wikimedia.org/wiki/File:Zoso_John_Bonham_sigil_three_intersecting_circles.svg
+.. |image-source| replace:: source
