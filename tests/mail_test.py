@@ -2,7 +2,7 @@
 from tornado.escape import utf8
 from tornado.testing import ExpectLog
 from bonzo import errors
-from bonzo.mail import MessageHandler
+from bonzo.mail import Application, RequestHandler
 from bonzo.testing import AsyncSMTPTestCase
 
 from tests import server_test
@@ -11,71 +11,72 @@ from tests import server_test
 class HandlerSMTPConnectionTest(server_test.SMTPConnectionTest):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
             pass
 
-        return Handler()
+        return Application(Handler)
 
 
 class HandlerSMTPRequestTest(server_test.SMTPRequestTest):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
 
-            def data(h, request):
-                self.request_mail = request.mail
-                self.request_rcpt = request.rcpt
-                self.request_data = request.data
+            def data(h):
+                self.request_mail = h.request.mail
+                self.request_rcpt = h.request.rcpt
+                self.request_data = h.request.data
 
-        return Handler()
+        return Application(Handler)
 
 
 class HandlerSMTPServerTest(server_test.SMTPServerTest):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
 
-            def data(self, request):
+            def data(self):
                 raise Exception('This is a custom exception')
 
-        return Handler()
+        return Application(Handler)
 
 
 class HandlerErrorTest(server_test.SMTPServerErrorTest):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
 
-            def data(self, request):
+            def data(self):
                 raise errors.SMTPError(self.settings['status_code'],
                                        self.settings['message'])
 
-        return Handler(status_code=self.status_code, message=self.message)
+        return Application(Handler, status_code=self.status_code,
+                           message=self.message)
 
 
 class HandlerErrorLogMessageTest(server_test.SMTPServerErrorLogMessageTest):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
 
-            def data(self, request):
+            def data(self):
                 raise errors.SMTPError(self.settings['status_code'],
                                        self.settings['message'],
                                        self.settings['log_message'])
 
-        return Handler(status_code=self.status_code, message=self.message,
-                       log_message=self.log_message)
+        return Application(Handler, status_code=self.status_code,
+                           message=self.message, log_message=self.log_message)
 
 
 class HandlerNotReturnsNoneTest(AsyncSMTPTestCase):
 
     def get_request_callback(self):
-        class Handler(MessageHandler):
+        class Handler(RequestHandler):
 
-            def data(self, request):
+            def data(self):
                 return True
 
-        return Handler()
+        return Application(Handler)
 
     def test_returns_true(self):
         self.connect()

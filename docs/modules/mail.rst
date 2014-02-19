@@ -4,4 +4,5 @@
 .. automodule:: bonzo.mail
    :synopsis: Tools for handling requests with asynchronous features
    :members:
+   :undoc-members:
    :show-inheritance:
