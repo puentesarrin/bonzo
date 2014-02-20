@@ -53,8 +53,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_duplicate_helo(self):
         self.connect()
         self.stream.write(b'HELO NameClient\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Hello 127.0.0.1\r\n')
+        self.read_response()
         self.stream.write(b'HELO NameClient\r\n')
         data = self.read_response()
         self.assertEqual(data, b'503 Duplicate HELO/EHLO\r\n')
@@ -99,8 +98,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_duplicate_from(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:anothermail@example.com\r\n')
         data = self.read_response()
         self.assertEqual(data, b'503 Error: nested MAIL command\r\n')
@@ -110,8 +108,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         for address in ['mail@example.com', '<mail@example.com>']:
             self.connect()
             self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-            data = self.read_response()
-            self.assertEqual(data, b'250 Ok\r\n')
+            self.read_response()
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
@@ -120,8 +117,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_rcpt_without_address(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         self.stream.write(b'RCPT TO:\r\n')
         data = self.read_response()
         self.assertEqual(data, b'501 Syntax: RCPT TO:<address>\r\n')
@@ -137,8 +133,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_rcpt_multiple_adressess(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
             data = self.read_response()
@@ -162,12 +157,10 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_data(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            data = self.read_response()
-            self.assertEqual(data, b'250 Ok\r\n')
+            self.read_response()
         self.stream.write(b'DATA\r\n')
         data = self.read_response()
         self.assertEqual(data, b'354 End data with <CR><LF>.<CR><LF>\r\n')
@@ -186,8 +179,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_data_without_rcpt(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         self.stream.write(b'DATA\r\n')
         data = self.read_response()
         self.assertEqual(data, b'503 Error: need RCPT command\r\n')
@@ -196,12 +188,10 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_data_with_arguments(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        data = self.read_response()
-        self.assertEqual(data, b'250 Ok\r\n')
+        self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            data = self.read_response()
-            self.assertEqual(data, b'250 Ok\r\n')
+            self.read_response()
         self.stream.write(b'DATA args\r\n')
         data = self.read_response()
         self.assertEqual(data, b'501 Syntax: DATA\r\n')
