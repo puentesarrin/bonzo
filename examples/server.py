@@ -2,14 +2,15 @@
 import sys
 sys.path = ['..'] + sys.path
 
-from tornado.ioloop import IOLoop
-from bonzo.server import SMTPServer
+import tornado.ioloop
+import bonzo.server
 
 
 def handle_request(request):
     print(request)
-    request.finish() 
+    request.finish()
 
 if __name__ == '__main__':
-    SMTPServer(handle_request).listen(2525)
-    IOLoop.current().start()
+    smtp_server = bonzo.server.SMTPServer(handle_request)
+    smtp_server.listen(2525)
+    tornado.ioloop.IOLoop.current().start()

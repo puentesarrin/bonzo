@@ -39,16 +39,20 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
 
 .. code-block:: python
 
-   from tornado.ioloop import IOLoop
-   from bonzo.server import SMTPServer
+   import tornado.ioloop
+   import bonzo.mail
 
 
-   def handle_request(request):
-       print(request.message)
-       request.finish()
+   class Handler(bonzo.mail.RequestHandler):
 
-   SMTPServer(handle_request).listen(2525)
-   IOLoop.current().start()
+       def data(self):
+           print(self.request.message)
+
+   application = bonzo.mail.Application(Handler)
+
+   if __name__ == '__main__':
+       application.listen(2525)
+       tornado.ioloop.IOLoop.current().start()
 
 Installation
 ============
