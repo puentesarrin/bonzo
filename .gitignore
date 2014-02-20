@@ -4,6 +4,7 @@
 *~
 build/*
 dist/*
+distribute-*
 *.egg/*
 *.egg-info/*
 docs/_build/*
