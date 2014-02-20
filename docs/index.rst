@@ -55,7 +55,7 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
        tornado.ioloop.IOLoop.current().start()
 
 Installation
-============
+------------
 
 You can to use pip_ to install Bonzo:
 
@@ -70,7 +70,7 @@ Or using last source:
    $ pip install git+https://github.com/puentesarrin/bonzo.git
 
 License
-=======
+-------
 
 Bonzo is available under the |apache-license|_.
 
