@@ -220,15 +220,7 @@ class SMTPRequestTest(AsyncSMTPTestCase):
 
     def test_request_object(self):
         self.connect()
-        self.stream.write(utf8('MAIL FROM:%s\r\n' % self.mail))
-        self.read_response()
-        for address in self.rcpt:
-            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            self.read_response()
-        self.stream.write(b'DATA\r\n')
-        self.read_response()
-        self.stream.write(utf8('%s\r\n.\r\n' % self.data))
-        data = self.read_response()
+        data = self.send_mail(self.mail, self.rcpt, self.data)
         self.assertEqual(data, b'250 Ok\r\n')
         self.assertEqual(self.mail, self.request_mail)
         self.assertEqual(self.rcpt, self.request_rcpt)
@@ -246,16 +238,10 @@ class SMTPServerTest(AsyncSMTPTestCase):
 
     def test_internal_confusion(self):
         self.connect()
-        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        self.read_response()
-        for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            self.read_response()
-        self.stream.write(b'DATA\r\n')
-        self.read_response()
         with ExpectLog('tornado.application', 'Uncaught exception'):
-            self.stream.write(b'This is a message\r\n.\r\n')
-            data = self.read_response()
+            data = self.send_mail('mail@example.com',
+                                  ['mail@example.com', '<mail@example.com>'],
+                                  'This is a message')
             self.assertEqual(data, b'451 Internal confusion\r\n')
         self.close()
 
@@ -274,15 +260,9 @@ class SMTPServerErrorTest(AsyncSMTPTestCase):
 
     def test_logged_smtp_error(self):
         self.connect()
-        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        self.read_response()
-        for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            self.read_response()
-        self.stream.write(b'DATA\r\n')
-        self.read_response()
-        self.stream.write(b'This is a message\r\n.\r\n')
-        data = self.read_response()
+        data = self.send_mail('mail@example.com',
+                              ['mail@example.com', '<mail@example.com>'],
+                              'This is a message')
         self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,
                                                    self.message)))
         self.close()
@@ -304,17 +284,11 @@ class SMTPServerErrorLogMessageTest(AsyncSMTPTestCase):
 
     def test_logged_smtp_error_with_message(self):
         self.connect()
-        self.stream.write(b'MAIL FROM:mail@example.com\r\n')
-        self.read_response()
-        for address in ['mail@example.com', '<mail@example.com>']:
-            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
-            self.read_response()
-        self.stream.write(b'DATA\r\n')
-        self.read_response()
         with ExpectLog('tornado.general', r'.*%d %s' % (self.status_code,
                                                         self.log_message)):
-            self.stream.write(b'This is a message\r\n.\r\n')
-            data = self.read_response()
+            data = self.send_mail('mail@example.com',
+                                  ['mail@example.com', '<mail@example.com>'],
+                                  'This is a message')
             self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,
                                                        self.message)))
         self.close()

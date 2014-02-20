@@ -36,8 +36,8 @@ New modules
 :mod:`bonzo.testing`
 ~~~~~~~~~~~~~~~~~~~~
 
-- Added ``connect``, ``read_response``, and ``close`` methods to the
-  :class:`~bonzo.testing.AsyncSMTPTestCase` class. These methods are oriented
-  for ease to create tests to the SMTP server.
+- Added ``connect``, ``read_response``, ``send_mail``, and ``close`` methods to
+  the :class:`~bonzo.testing.AsyncSMTPTestCase` class. These methods are
+  oriented for ease to create tests to the SMTP server.
 
 .. _ReadTheDocs: http://bonzo.readthedocs.org

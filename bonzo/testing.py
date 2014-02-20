@@ -2,6 +2,7 @@
 """Unit testing support for asynchronous code."""
 import socket
 
+from tornado.escape import utf8
 from tornado.iostream import IOStream
 from tornado.testing import AsyncTestCase, bind_unused_port
 from bonzo.server import SMTPServer
@@ -70,6 +71,20 @@ class AsyncSMTPTestCase(AsyncTestCase):
         """
         self.stream.read_until(b'\r\n', self.stop)
         return self.wait()
+
+    def send_mail(self, mail, rcpt, data):
+        """Sends a coherent sequence of command to send a message. Returns the
+        result from the ``DATA`` command.
+        """
+        self.stream.write(utf8('MAIL FROM:%s\r\n' % mail))
+        self.read_response()
+        for address in rcpt:
+            self.stream.write(utf8('RCPT TO:%s\r\n' % address))
+            self.read_response()
+        self.stream.write(b'DATA\r\n')
+        self.read_response()
+        self.stream.write(utf8('%s\r\n.\r\n' % data))
+        return self.read_response()
 
     def close(self):
         """Closes the stream.
