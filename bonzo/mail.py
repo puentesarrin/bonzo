@@ -14,6 +14,7 @@ class RequestHandler(object):
         self.request = request
         self._finished = False
         self._auto_finish = True
+        self.request.connection.set_close_callback(self.on_connection_close)
 
     @property
     def settings(self):
@@ -38,6 +39,20 @@ class RequestHandler(object):
         Override this method to perform cleanup, logging, etc. This method is a
         counterpart to :meth:`prepare`.  ``on_finish`` may not produce any
         output, as it is called after the response has been sent to the client.
+        """
+        pass
+
+    def on_connection_close(self):
+        """Called in async handlers if the client closed the connection.
+
+        Override this to clean up resources associated with long-lived
+        connections. Note that this method is called only if the connection was
+        closed during asynchronous processing; if you need to do cleanup after
+        every request override `on_finish` instead.
+
+        Proxies may keep a connection open for a time (perhaps indefinitely)
+        after the client has gone away, so this method may not be called
+        promptly after the end user closes their connection.
         """
         pass
 
@@ -74,6 +89,9 @@ class RequestHandler(object):
         """Finishes this response, ending the SMTP request."""
         if self._finished:
             raise RuntimeError("finish() called twice.")
+        # Now that the request is finished, clear the callback we set on the
+        # SMTPConnection
+        self.request.connection.set_close_callback(None)
         self.request.finish()
         self._finished = True
         self.on_finish()
