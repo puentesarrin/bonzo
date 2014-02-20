@@ -108,7 +108,7 @@ class HandlerWithTwiceFinishTest(AsyncSMTPTestCase):
 
         return Application(Handler)
 
-    def test_returns_true(self):
+    def test_twice_finish(self):
         self.connect()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         data = self.read_response()
