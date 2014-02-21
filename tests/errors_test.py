@@ -17,20 +17,20 @@ class SMTPErrorTest(unittest.TestCase):
 
     def test_str(self):
         e = errors.SMTPError(self.status_code, self.message)
-        self.assertEquals(str(e), 'SMTP %d: %s' % (self.status_code,
-                                                   self.message))
+        self.assertEqual(str(e), 'SMTP %d: %s' % (self.status_code,
+                                                  self.message))
 
     def test_str_with_log_message(self):
         e = errors.SMTPError(self.status_code, self.message, self.log_message,
                              *self.args)
-        self.assertEquals(str(e),
-                          'SMTP %d: %s (%s)' % (self.status_code, self.message,
-                                                (self.log_message % self.args)))
+        self.assertEqual(str(e),
+                         'SMTP %d: %s (%s)' % (self.status_code, self.message,
+                                               (self.log_message % self.args)))
 
     def test_internal_confusion_error(self):
         e = errors.InternalConfusion()
-        self.assertEquals(str(e), 'SMTP %d: %s' % (451, 'Internal confusion'))
+        self.assertEqual(str(e), 'SMTP %d: %s' % (451, 'Internal confusion'))
 
     def test_unrecognised_command_error(self):
         e = errors.UnrecognisedCommand()
-        self.assertEquals(str(e), 'SMTP %d: %s' % (500, 'Error: bad syntax'))
+        self.assertEqual(str(e), 'SMTP %d: %s' % (500, 'Error: bad syntax'))

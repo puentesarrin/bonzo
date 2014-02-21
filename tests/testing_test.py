@@ -25,7 +25,7 @@ class AsyncSMTPTestCaseWrapperTest(unittest.TestCase):
         test = Test('test_pass')
         result = unittest.TestResult()
         test.run(result)
-        self.assertEquals(test.get_request_callback(), request_callback)
+        self.assertEqual(test.get_request_callback(), request_callback)
 
     def test_request_callback_raise_error(self):
         class Test(AsyncSMTPTestCase):
