@@ -1,5 +1,7 @@
 # -*- coding: utf-8 *-*
 import os
+import subprocess
+import sys
 
 try:
     from setuptools import setup
@@ -8,11 +10,44 @@ except ImportError:
     use_setuptools()
     from setuptools import setup
 
+from distutils.cmd import Command
 from bonzo import __version__
 
 
 with open('README.rst') as f:
     readme_content = f.read()
+
+
+class DocCommand(Command):
+
+    description = "generate or test documentation"
+    user_options = [("test", "t",
+                     "run doctests instead of generating documentation")]
+    boolean_options = ["test"]
+
+    def initialize_options(self):
+        self.test = False
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        if self.test:
+            path = "docs/_build/doctest"
+            mode = "doctest"
+        else:
+            path = "docs/_build/%s" % __version__
+            mode = "html"
+            try:
+                os.makedirs(path)
+            except:
+                pass
+        status = subprocess.call(["sphinx-build", "-E",
+                                  "-b", mode, "docs", path])
+        if status:
+            raise RuntimeError("documentation step '%s' failed" % (mode,))
+        sys.stdout.write("\nDocumentation step '%s' performed, results here:\n"
+                         "   %s/\n" % (mode, path))
 
 setup(
     name='bonzo',
@@ -43,4 +78,5 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Internet :: Proxy Servers'],
     test_suite='tests.runtests',
+    cmdclass={"doc": DocCommand}
 )
