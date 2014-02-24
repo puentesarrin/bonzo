@@ -65,6 +65,25 @@ Or using last source:
 
    $ pip install git+https://github.com/puentesarrin/bonzo.git
 
+Documentation
+=============
+
+Sphinx_ is needed to generate the documentation. Documentation can be generated
+by issuing the following commands:
+
+.. code-block:: bash
+
+   $ cd docs
+   $ make html
+
+Or simply:
+
+.. code-block:: bash
+
+   $ python setup.py doc
+
+Also, the current documentation can be found at ReadTheDocs_.
+
 License
 =======
 
@@ -78,6 +97,8 @@ Bonzo is available under the |apache-license|_.
 .. _Tornado: http://tornadoweb.org
 .. _smtpd: http://docs.python.org/library/smtpd.html
 .. _pip: http://pypi.python.org/pypi/pip
+.. _Sphinx: http://sphinx-doc.org
+.. _ReadTheDocs: https://bonzo.readthedocs.org
 .. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
 .. |apache-license| replace:: Apache License, Version 2.0
 .. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture
