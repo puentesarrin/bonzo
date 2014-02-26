@@ -4,8 +4,9 @@ Release Notes for Bonzo 0.1.2
 *February 04, 2014*
 
 - ``bonzo.smtpserver`` module is renamed to :mod:`bonzo.server`. This is
-  motivated to add a module called ``smtp`` containing tools for handling
-  requests with asynchronous features, very similar to :mod:`tornado.web`.
+  motivated to add (in the next version) a module called ``smtp`` containing
+  tools for handling requests with asynchronous features, very similar to
+  :mod:`tornado.web`.
 - Added Python 3 support.
 - Added Travis and Coveralls configuration (Issue :issue:`#1 <1>`). Thanks to
   Luis Mayta.
