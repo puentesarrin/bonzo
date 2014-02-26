@@ -16,6 +16,6 @@ Package Documentation
    :maxdepth: 4
 
    server
-   mail
+   smtp
    testing
    errors

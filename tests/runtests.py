@@ -3,7 +3,7 @@ import os
 import sys
 from unittest import defaultTestLoader, TextTestRunner, TestSuite
 
-TESTS = ('init_test', 'mail_test', 'server_test', 'testing_test',
+TESTS = ('init_test', 'server_test', 'smtp_test', 'testing_test',
          'errors_test', )
 
 

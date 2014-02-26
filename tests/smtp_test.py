@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from tornado.testing import ExpectLog
 from bonzo import errors
-from bonzo.mail import Application, RequestHandler
+from bonzo.smtp import Application, RequestHandler
 from bonzo.testing import AsyncSMTPTestCase
 
 from tests import server_test
