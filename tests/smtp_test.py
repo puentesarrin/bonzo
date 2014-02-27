@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import logging
+
+from tornado import gen
 from tornado.testing import ExpectLog
 from bonzo import errors
 from bonzo.smtp import Application, RequestHandler
@@ -102,6 +105,38 @@ class HandlerWithTwiceFinishTest(AsyncSMTPTestCase):
     def test_twice_finish(self):
         self.connect()
         with ExpectLog('tornado.application', 'Uncaught exception'):
+            data = self.send_mail('mail@example.com',
+                                  ['mail@example.com', '<mail@example.com>'],
+                                  'This is a message')
+            self.assertEqual(data, b'250 Ok\r\n')
+        self.close()
+
+
+class HandlerCoroutineTest(AsyncSMTPTestCase):
+
+    def setUp(self):
+        self.coroutine_result = 'result from coroutine'
+        super(HandlerCoroutineTest, self).setUp()
+
+    def get_request_callback(self):
+        class Handler(RequestHandler):
+
+            @gen.coroutine
+            def coroutine_decorated(h):
+                raise gen.Return(self.coroutine_result)
+
+            @gen.coroutine
+            def data(self):
+                result = yield self.coroutine_decorated()
+                logging.info(result)
+
+        return Application(Handler)
+
+    def test_coroutine_on_data(self):
+        self.connect()
+        root_logger = logging.getLogger()
+        root_logger.setLevel(20)
+        with ExpectLog(root_logger, self.coroutine_result):
             data = self.send_mail('mail@example.com',
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
