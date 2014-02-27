@@ -103,17 +103,7 @@ class Application(object):
 
     .. code-block:: python
 
-       from tornado import ioloop
-       from bonzo import server
-       from bonzo.mail import RequestHandler
-
-
-       class Handler(RequestHandler):
-
-           def data(self):
-               print(self.request.message)
-
-       application = mail.Application(Handler)
+       application = smtp.Application(Handler)
        smtp_server = server.SMTPServer(application)
        smtp_server.listen(2525)
        ioloop.IOLoop.current().start()
