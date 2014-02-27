@@ -36,15 +36,15 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
 .. code-block:: python
 
    import tornado.ioloop
-   import bonzo.mail
+   import bonzo.smtp
 
 
-   class Handler(bonzo.mail.RequestHandler):
+   class Handler(bonzo.smtp.RequestHandler):
 
        def data(self):
            print(self.request.message)
 
-   application = bonzo.mail.Application(Handler)
+   application = bonzo.smtp.Application(Handler)
 
    if __name__ == '__main__':
        application.listen(2525)
