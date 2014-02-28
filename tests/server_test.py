@@ -84,7 +84,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.assertEqual(data, b'221 Bye\r\n')
         self.close()
 
-    def test_from(self):
+    def test_mail(self):
         for address in ['mail@example.com', '<mail@example.com>']:
             self.connect()
             self.stream.write(b'HELO NameClient\r\n')
@@ -94,14 +94,14 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
             self.assertEqual(data, b'250 Ok\r\n')
             self.close()
 
-    def test_from_without_helo(self):
+    def test_mail_without_helo(self):
         self.connect()
         self.stream.write(utf8('MAIL FROM:mail@example.com\r\n'))
         data = self.read_response()
         self.assertEqual(data, b'503 Error: need HELO command\r\n')
         self.close()
 
-    def test_from_without_address(self):
+    def test_mail_without_address(self):
         self.connect()
         self.stream.write(b'HELO NameClient\r\n')
         self.read_response()
@@ -110,7 +110,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.assertEqual(data, b'501 Syntax: MAIL FROM:<address>\r\n')
         self.close()
 
-    def test_duplicate_from(self):
+    def test_duplicate_mail(self):
         self.connect()
         self.stream.write(b'HELO NameClient\r\n')
         self.read_response()
@@ -144,7 +144,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.assertEqual(data, b'501 Syntax: RCPT TO:<address>\r\n')
         self.close()
 
-    def test_rcpt_without_from(self):
+    def test_rcpt_without_mail(self):
         self.connect()
         self.stream.write(b'RCPT TO:mail@example.com\r\n')
         data = self.read_response()
@@ -194,7 +194,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
         self.assertEqual(data, b'250 Ok\r\n')
         self.close()
 
-    def test_data_without_from(self):
+    def test_data_without_mail(self):
         self.connect()
         self.stream.write(b'DATA\r\n')
         data = self.read_response()
