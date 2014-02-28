@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
-
 from tornado import gen
 from tornado.testing import ExpectLog
 from bonzo import errors
@@ -126,19 +124,15 @@ class HandlerCoroutineTest(AsyncSMTPTestCase):
                 raise gen.Return(self.coroutine_result)
 
             @gen.coroutine
-            def data(self):
-                result = yield self.coroutine_decorated()
-                logging.info(result)
+            def data(h):
+                self.data_result = yield h.coroutine_decorated()
 
         return Application(Handler)
 
     def test_coroutine_on_data(self):
         self.connect()
-        root_logger = logging.getLogger()
-        root_logger.setLevel(20)
-        with ExpectLog(root_logger, self.coroutine_result):
-            data = self.send_mail('mail@example.com',
-                                  ['mail@example.com', '<mail@example.com>'],
-                                  'This is a message')
-            self.assertEqual(data, b'250 Ok\r\n')
+        self.send_mail('mail@example.com',
+                       ['mail@example.com', '<mail@example.com>'],
+                       'This is a message')
+        self.assertEqual(self.data_result, self.coroutine_result)
         self.close()
