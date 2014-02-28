@@ -256,6 +256,8 @@ class SMTPConnection(object):
         - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
           already was received.
         """
+        if not self.__hostname:
+            raise errors.BadSequence('Error: need HELO command')
         address = self.__getaddr('FROM:', arg) if arg else None
         if not address:
             raise errors.BadArguments('MAIL FROM:<address>')

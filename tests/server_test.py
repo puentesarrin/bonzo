@@ -77,6 +77,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_quit(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'QUIT\r\n')
         data = self.read_response()
         self.assertEqual(data, b'221 Bye\r\n')
@@ -85,13 +87,24 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_from(self):
         for address in ['mail@example.com', '<mail@example.com>']:
             self.connect()
+            self.stream.write(b'HELO NameClient\r\n')
+            self.read_response()
             self.stream.write(utf8('MAIL FROM:%s\r\n' % address))
             data = self.read_response()
             self.assertEqual(data, b'250 Ok\r\n')
             self.close()
 
+    def test_from_without_helo(self):
+        self.connect()
+        self.stream.write(utf8('MAIL FROM:mail@example.com\r\n'))
+        data = self.read_response()
+        self.assertEqual(data, b'503 Error: need HELO command\r\n')
+        self.close()
+
     def test_from_without_address(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:\r\n')
         data = self.read_response()
         self.assertEqual(data, b'501 Syntax: MAIL FROM:<address>\r\n')
@@ -99,6 +112,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_duplicate_from(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         self.stream.write(b'MAIL FROM:anothermail@example.com\r\n')
@@ -109,6 +124,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
     def test_rcpt(self):
         for address in ['mail@example.com', '<mail@example.com>']:
             self.connect()
+            self.stream.write(b'HELO NameClient\r\n')
+            self.read_response()
             self.stream.write(b'MAIL FROM:mail@example.com\r\n')
             self.read_response()
             self.stream.write(utf8('RCPT TO:%s\r\n' % address))
@@ -118,6 +135,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_rcpt_without_address(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         self.stream.write(b'RCPT TO:\r\n')
@@ -134,6 +153,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_rcpt_multiple_adressess(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
@@ -158,6 +179,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_data(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
@@ -180,6 +203,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_data_without_rcpt(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         self.stream.write(b'DATA\r\n')
@@ -189,6 +214,8 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 
     def test_data_with_arguments(self):
         self.connect()
+        self.stream.write(b'HELO NameClient\r\n')
+        self.read_response()
         self.stream.write(b'MAIL FROM:mail@example.com\r\n')
         self.read_response()
         for address in ['mail@example.com', '<mail@example.com>']:
@@ -203,6 +230,7 @@ class SMTPConnectionTest(AsyncSMTPTestCase):
 class SMTPRequestTest(AsyncSMTPTestCase):
 
     def setUp(self):
+        self.hostname = 'client'
         self.mail = 'mail@example.com'
         self.rcpt = ['mail@example.com', 'anothermail@example.com']
         self.data = 'This is a message.'
@@ -221,7 +249,7 @@ class SMTPRequestTest(AsyncSMTPTestCase):
 
     def test_request_object(self):
         self.connect()
-        data = self.send_mail(self.mail, self.rcpt, self.data)
+        data = self.send_mail(self.hostname, self.mail, self.rcpt, self.data)
         self.assertEqual(data, b'250 Ok\r\n')
         self.assertEqual(self.mail, self.request_mail)
         self.assertEqual(self.rcpt, self.request_rcpt)
@@ -242,7 +270,7 @@ class SMTPServerTest(AsyncSMTPTestCase):
     def test_internal_confusion(self):
         self.connect()
         with ExpectLog('tornado.application', 'Uncaught exception'):
-            data = self.send_mail('mail@example.com',
+            data = self.send_mail('client', 'mail@example.com',
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
             self.assertEqual(data, b'451 Internal confusion\r\n')
@@ -263,7 +291,7 @@ class SMTPServerErrorTest(AsyncSMTPTestCase):
 
     def test_logged_smtp_error(self):
         self.connect()
-        data = self.send_mail('mail@example.com',
+        data = self.send_mail('client', 'mail@example.com',
                               ['mail@example.com', '<mail@example.com>'],
                               'This is a message')
         self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,
@@ -289,7 +317,7 @@ class SMTPServerErrorLogMessageTest(AsyncSMTPTestCase):
         self.connect()
         with ExpectLog('tornado.general', r'.*%d %s' % (self.status_code,
                                                         self.log_message)):
-            data = self.send_mail('mail@example.com',
+            data = self.send_mail('client', 'mail@example.com',
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
             self.assertEqual(data, utf8('%d %s\r\n' % (self.status_code,

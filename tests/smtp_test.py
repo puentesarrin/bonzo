@@ -82,7 +82,7 @@ class HandlerNotReturnsNoneTest(AsyncSMTPTestCase):
     def test_returns_true(self):
         self.connect()
         with ExpectLog('tornado.application', 'Uncaught exception'):
-            data = self.send_mail('mail@example.com',
+            data = self.send_mail('client', 'mail@example.com',
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
             self.assertEqual(data, b'451 Internal confusion\r\n')
@@ -103,7 +103,7 @@ class HandlerWithTwiceFinishTest(AsyncSMTPTestCase):
     def test_twice_finish(self):
         self.connect()
         with ExpectLog('tornado.application', 'Uncaught exception'):
-            data = self.send_mail('mail@example.com',
+            data = self.send_mail('client', 'mail@example.com',
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
             self.assertEqual(data, b'250 Ok\r\n')
@@ -131,7 +131,7 @@ class HandlerCoroutineTest(AsyncSMTPTestCase):
 
     def test_coroutine_on_data(self):
         self.connect()
-        self.send_mail('mail@example.com',
+        self.send_mail('client', 'mail@example.com',
                        ['mail@example.com', '<mail@example.com>'],
                        'This is a message')
         self.assertEqual(self.data_result, self.coroutine_result)
