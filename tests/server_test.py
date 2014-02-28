@@ -244,6 +244,7 @@ class SMTPRequestTest(AsyncSMTPTestCase):
             self.request_rcpt = request.rcpt
             self.request_data = request.data
             self.request_message = request.message
+            self.request_repr = '%s' % request
             request.finish()
         return request_callback
 
@@ -256,6 +257,11 @@ class SMTPRequestTest(AsyncSMTPTestCase):
         self.assertEqual(self.data, self.request_data)
         self.assertEqual(self.message.as_string(),
                          self.request_message.as_string())
+        self.assertTrue(("remote_ip='127.0.0.1'") in self.request_repr)
+        self.assertTrue(("hostname='%s'" % self.hostname) in self.request_repr)
+        self.assertTrue(("mail='%s'" % self.mail) in self.request_repr)
+        self.assertTrue(("rcpt='%s'" % [to_unicode(r) for r in self.rcpt])
+                        in self.request_repr)
         self.close()
 
 

@@ -348,5 +348,5 @@ class SMTPRequest(object):
 
     def __repr__(self):
         attrs = ('remote_ip', 'hostname', 'mail', 'rcpt')
-        args = ', '.join(["%s=%r" % (n, getattr(self, n)) for n in attrs])
+        args = ', '.join(["%s='%s'" % (n, getattr(self, n)) for n in attrs])
         return '%s (%s)' % (self.__class__.__name__, args)
