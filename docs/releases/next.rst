@@ -32,6 +32,8 @@ New modules
 - Exceptions in request callbacks no longer silently pass, instead the
   server returns an internal confusion error (``451``) to the client and the
   exceptions are now logged for debugging.
+- ``MAIL`` command returns a ``503`` error when a ``HELO`` command was not
+  previously received.
 
 :mod:`bonzo.testing`
 ~~~~~~~~~~~~~~~~~~~~

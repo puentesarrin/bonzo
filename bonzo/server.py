@@ -251,6 +251,8 @@ class SMTPConnection(object):
     def command_mail(self, arg):
         """Handles the ``MAIL`` SMTP command.
 
+        - Raises a :class:`~bonzo.errors.BadSequence` when a ``HELO`` command
+          wasn't previously received.
         - Raises a :class:`~bonzo.errors.BadArguments` when the ``from`` address
           is not received.
         - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
