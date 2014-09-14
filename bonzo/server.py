@@ -324,13 +324,13 @@ class SMTPRequest(object):
     """
 
     def __init__(self, connection, remote_ip, command, hostname=None, mail=None,
-                 rcpt=[], data=None):
+                 rcpt=None, data=None):
         self.connection = connection
         self.remote_ip = remote_ip
         self.command = command
         self.hostname = hostname
         self.mail = mail
-        self.rcpt = rcpt
+        self.rcpt = rcpt or []
         self.data = data
 
     @property
