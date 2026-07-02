@@ -1,6 +1,6 @@
 """Bonzo is an SMTP server built on top of Tornado."""
 
-version_tuple = (0, 2, 0, '.dev0')
+version_tuple = (0, 2, 0)
 
 
 def get_version_string():
