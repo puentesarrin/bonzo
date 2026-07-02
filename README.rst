@@ -10,7 +10,7 @@ Bonzo
    :target: https://coveralls.io/github/puentesarrin/bonzo?branch=master
    :alt: Coverage status
 
-.. image:: https://bonzo.readthedocs.io/en/latest/_images/bonzo_sigil.png
+.. image:: https://bonzo.readthedocs.io/latest/_images/bonzo_sigil.png
    :align: center
    :alt: John Bonham's sigil three intersecting circles
 
