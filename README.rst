@@ -33,7 +33,6 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
 
 
    class Handler(bonzo.smtp.RequestHandler):
-
        async def data(self):
            print(self.request.message)
 
@@ -108,7 +107,7 @@ Bonzo is available under the |apache-license|_.
 .. _Sphinx: https://www.sphinx-doc.org/
 .. _tox: https://tox.wiki/
 .. _ReadTheDocs: https://bonzo.readthedocs.io
-.. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
+.. _apache-license: https://www.apache.org/licenses/LICENSE-2.0.html
 .. |apache-license| replace:: Apache License, Version 2.0
 .. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture
 .. _image-source: http://commons.wikimedia.org/wiki/File:Zoso_John_Bonham_sigil_three_intersecting_circles.svg
