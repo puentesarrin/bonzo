@@ -1,1 +1,13 @@
+include LICENSE
 include README.rst
+include pyproject.toml
+include tox.ini
+include docs/Makefile
+include docs/make.bat
+include docs/conf.py
+include docs/*.rst
+recursive-include docs/_static *.png
+recursive-include docs/modules *.rst
+recursive-include docs/releases *.rst
+recursive-include examples *.py
+recursive-include tests *.py

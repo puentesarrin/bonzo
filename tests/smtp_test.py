@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from tornado import gen
 from tornado.testing import ExpectLog
 from bonzo import errors
@@ -87,6 +86,29 @@ class HandlerNotReturnsNoneTest(AsyncSMTPTestCase):
                                   ['mail@example.com', '<mail@example.com>'],
                                   'This is a message')
             self.assertEqual(data, b'451 Internal confusion\r\n')
+        self.close()
+
+
+class HandlerNativeAsyncTest(AsyncSMTPTestCase):
+
+    def setUp(self):
+        self.async_result = 'result from native async handler'
+        super(HandlerNativeAsyncTest, self).setUp()
+
+    def get_request_callback(self):
+        class Handler(RequestHandler):
+
+            async def data(h):
+                self.data_result = self.async_result
+
+        return Application(Handler)
+
+    def test_async_data(self):
+        self.connect()
+        self.send_mail('client', 'mail@example.com',
+                       ['mail@example.com', '<mail@example.com>'],
+                       'This is a message')
+        self.assertEqual(self.data_result, self.async_result)
         self.close()
 
 

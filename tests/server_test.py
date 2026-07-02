@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import email
 
 from tornado.escape import to_unicode, utf8

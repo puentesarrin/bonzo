@@ -1,0 +1,13 @@
+Release Notes for Bonzo 0.2.0
+=============================
+
+This release modernizes Bonzo for current Python and Tornado versions.
+
+- Require Python 3.9 or newer.
+- Require Tornado 6.5 or newer.
+- Replace callback-based connection handling with native ``async``/``await``.
+- Support native async request handlers, including ``async def data``.
+- Move package metadata to ``pyproject.toml``.
+- Replace ``setup.py test`` with unittest discovery and tox.
+- Remove the old ``distribute_setup.py`` bootstrap.
+- Refresh examples and documentation for ``asyncio.run``.

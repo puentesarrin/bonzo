@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Unit testing support for asynchronous code."""
 import socket
 
@@ -20,17 +19,20 @@ class AsyncSMTPTestCase(AsyncTestCase):
         sock, port = bind_unused_port()
         self.__port = port
 
-        self._request_callback = self.get_request_callback()
-        self.smtp_server = self.get_smtp_server()
-        self.smtp_server.add_sockets([sock])
+        try:
+            self._request_callback = self.get_request_callback()
+            self.smtp_server = self.get_smtp_server()
+            self.smtp_server.add_sockets([sock])
+        except Exception:
+            sock.close()
+            raise
 
     def get_smtp_server(self):
         """Returns an instance of :class:`~.server.SMTPServer` that will be
         used in the test case. It's inmediatelly called when the
         :class:`~.testing.AsyncSMTPTestCase` is instanced.
         """
-        return SMTPServer(self._request_callback, io_loop=self.io_loop,
-                          **self.get_smtpserver_options())
+        return SMTPServer(self._request_callback, **self.get_smtpserver_options())
 
     def get_request_callback(self):
         """Should be overridden by subclasses to return a
@@ -60,17 +62,16 @@ class AsyncSMTPTestCase(AsyncTestCase):
              after to establish connection. Useful to read the response and
              discard the welcome message.
         """
-        self.stream = IOStream(socket.socket(), io_loop=self.io_loop)
-        self.stream.connect(('localhost', self.get_smtp_port()), self.stop)
-        self.wait()
+        self.stream = IOStream(socket.socket())
+        self.io_loop.run_sync(
+            lambda: self.stream.connect(('localhost', self.get_smtp_port())))
         if read_response:
             self.read_response()
 
     def read_response(self):
         """Reads the response of the stream.
         """
-        self.stream.read_until(b'\r\n', self.stop)
-        return self.wait()
+        return self.io_loop.run_sync(lambda: self.stream.read_until(b'\r\n'))
 
     def send_mail(self, hostname, mail, rcpt, data):
         """Sends a coherent sequence of command to send a message. Returns the

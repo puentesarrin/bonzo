@@ -13,3 +13,8 @@ env/*
 .tox/*
 .coverage
 htmlcov/*
+.venv/
+__pycache__/
+*/__pycache__/
+coverage.xml
+docs/_build/

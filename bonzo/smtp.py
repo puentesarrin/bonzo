@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """Tools for handling requests with asynchronous features."""
-import functools
+import inspect
 
-from tornado.concurrent import Future
+from tornado.log import app_log
 
 
 class RequestHandler(object):
-    """Subclass this class and define :meth:`data()` to make a handler.
-    """
+    """Subclass this class and define :meth:`data()` to make a handler."""
 
     def __init__(self, application, request):
         self.application = application
@@ -43,54 +41,43 @@ class RequestHandler(object):
         pass
 
     def on_connection_close(self):
-        """Called in async handlers if the client closed the connection.
-
-        Override this to clean up resources associated with long-lived
-        connections. Note that this method is called only if the connection was
-        closed during asynchronous processing; if you need to do cleanup after
-        every request override `on_finish` instead.
-
-        Proxies may keep a connection open for a time (perhaps indefinitely)
-        after the client has gone away, so this method may not be called
-        promptly after the end user closes their connection.
-        """
+        """Called in async handlers if the client closed the connection."""
         pass
 
-    def _when_complete(self, result, callback):
-        if result is None:
-            callback()
-        elif isinstance(result, Future):
-            if result.done():
-                if result.result() is not None:
-                    raise ValueError('Expected None, got %r' % result.result())
-                callback()
-            else:
-                from tornado.ioloop import IOLoop
-                IOLoop.current().add_future(
-                    result, functools.partial(self._when_complete,
-                                              callback=callback))
-        else:
-            raise ValueError("Expected Future or None, got %r" % result)
+    async def _when_complete(self, result):
+        if inspect.isawaitable(result):
+            result = await result
+        if result is not None:
+            raise ValueError('Expected None, got %r' % result)
 
-    def _execute(self):
+    async def _execute(self):
         """Executes this request."""
-        self._when_complete(self.prepare(), self._execute_method)
-
-    def _execute_method(self):
+        await self._when_complete(self.prepare())
         if not self._finished:
             method = getattr(self, self.request.command.lower())
-            self._when_complete(method(), self._execute_finish)
-
-    def _execute_finish(self):
+            try:
+                await self._when_complete(method())
+            except Exception:
+                if self._finished:
+                    app_log.error('Uncaught exception', exc_info=True)
+                else:
+                    raise
         if self._auto_finish and not self._finished:
-            self.finish()
+            await self.finish_async()
+
+    async def finish_async(self):
+        """Finishes this response, ending the SMTP request."""
+        if self._finished:
+            raise RuntimeError("finish() called twice.")
+        self.request.connection.set_close_callback(None)
+        await self.request.finish_async()
+        self._finished = True
+        self.on_finish()
 
     def finish(self):
         """Finishes this response, ending the SMTP request."""
         if self._finished:
             raise RuntimeError("finish() called twice.")
-        # Now that the request is finished, clear the callback we set on the
-        # SMTPConnection
         self.request.connection.set_close_callback(None)
         self.request.finish()
         self._finished = True
@@ -103,10 +90,11 @@ class Application(object):
 
     .. code-block:: python
 
-       application = smtp.Application(Handler)
-       smtp_server = server.SMTPServer(application)
-       smtp_server.listen(2525)
-       ioloop.IOLoop.current().start()
+       async def main():
+           application = smtp.Application(Handler)
+           smtp_server = server.SMTPServer(application)
+           smtp_server.listen(2525)
+           await asyncio.Event().wait()
 
     .. attribute:: settings
 
@@ -131,12 +119,12 @@ class Application(object):
             from tornado import autoreload
             autoreload.start()
 
-    def __call__(self, request):
+    async def __call__(self, request):
         """Called by :class:`~bonzo.server.SMTPServer` to execute the
         request.
         """
         handler = self.handler_class(self, request)
-        handler._execute()
+        await handler._execute()
 
     def listen(self, port, address='', **kwargs):
         """Starts an SMTP server for this handler on the given port.
@@ -151,8 +139,8 @@ class Application(object):
         :meth:`~tornado.tcpserver.TCPServer.bind`/
         :meth:`~tornado.tcpserver.TCPServer.start` methods directly.
 
-        Note that after calling this method you still need to call
-        ``IOLoop.current().start()`` to start the server.
+        Note that after calling this method you still need to run the active
+        asyncio event loop to start the server.
         """
         from bonzo.server import SMTPServer
         server = SMTPServer(self, **kwargs)

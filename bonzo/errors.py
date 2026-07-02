@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SMTP exceptions for response to the client."""
 
 

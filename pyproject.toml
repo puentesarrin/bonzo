@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bonzo"
+dynamic = ["version"]
+description = "SMTP server built on top of Tornado."
+readme = "README.rst"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Jorge Puente Sarrín", email = "puentesarrin@gmail.com"},
+]
+keywords = ["bonzo", "tornado", "smtp", "server", "proxy"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet :: Proxy Servers",
+    "Topic :: Communications :: Email :: Mail Transport Agents",
+]
+dependencies = [
+    "tornado>=6.5,<7",
+]
+
+[project.optional-dependencies]
+docs = ["sphinx"]
+dev = ["build", "coverage[toml]", "sphinx", "twine", "tox>=4.21"]
+
+[project.urls]
+Homepage = "https://github.com/puentesarrin/bonzo"
+Repository = "https://github.com/puentesarrin/bonzo"
+Issues = "https://github.com/puentesarrin/bonzo/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "bonzo.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["bonzo*"]

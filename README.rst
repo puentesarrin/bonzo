@@ -2,31 +2,24 @@
 Bonzo
 =====
 
-.. image:: https://bonzo.readthedocs.org/en/latest/_images/bonzo_sigil.png
+.. image:: https://github.com/puentesarrin/bonzo/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/puentesarrin/bonzo/actions/workflows/ci.yml
+   :alt: CI status
+
+.. image:: https://coveralls.io/repos/github/puentesarrin/bonzo/badge.svg?branch=master
+   :target: https://coveralls.io/github/puentesarrin/bonzo?branch=master
+   :alt: Coverage status
+
+.. image:: https://bonzo.readthedocs.io/en/latest/_images/bonzo_sigil.png
    :align: center
    :alt: John Bonham's sigil three intersecting circles
 
 About
 =====
 
-Bonzo is a Python SMTP Server using the asynchronous network library of
-Tornado_. And it's actually a port of Python's smtpd_ module.
-
-.. image:: https://travis-ci.org/puentesarrin/bonzo.png
-   :target: https://travis-ci.org/puentesarrin/bonzo
-   :alt: Travis CI status
-
-.. image:: https://coveralls.io/repos/puentesarrin/bonzo/badge.png
-   :target: https://coveralls.io/r/puentesarrin/bonzo
-   :alt: Coveralls status
-
-.. image:: https://pypip.in/v/bonzo/badge.png
-   :target: https://pypi.python.org/pypi/bonzo
-   :alt: Latest PyPI version
-
-.. image:: https://pypip.in/d/bonzo/badge.png
-   :target: https://pypi.python.org/pypi/bonzo
-   :alt: Number of PyPI downloads
+Bonzo is an asynchronous SMTP server built on Tornado_. It started as
+a port of Python's old smtpd_ module and now uses Tornado's native
+async/await APIs.
 
 Hello, world
 ============
@@ -35,31 +28,35 @@ Here is a simple "Hello, world" example SMTP server for Bonzo:
 
 .. code-block:: python
 
-   import tornado.ioloop
+   import asyncio
    import bonzo.smtp
 
 
    class Handler(bonzo.smtp.RequestHandler):
 
-       def data(self):
+       async def data(self):
            print(self.request.message)
 
-   application = bonzo.smtp.Application(Handler)
+
+   async def main():
+       application = bonzo.smtp.Application(Handler)
+       application.listen(2525)
+       await asyncio.Event().wait()
+
 
    if __name__ == '__main__':
-       application.listen(2525)
-       tornado.ioloop.IOLoop.current().start()
+       asyncio.run(main())
 
 Installation
 ============
 
-You can to use pip_ to install Bonzo:
+Use pip_ to install Bonzo:
 
 .. code-block:: bash
 
    $ pip install bonzo
 
-Or using last source:
+Or install from the latest source:
 
 .. code-block:: bash
 
@@ -68,19 +65,30 @@ Or using last source:
 Documentation
 =============
 
-Sphinx_ is needed to generate the documentation. Documentation can be generated
-by issuing the following commands:
+Sphinx_ is needed to generate the documentation:
 
 .. code-block:: bash
 
-   $ cd docs
-   $ make html
+   $ python -m sphinx -W --keep-going -b html docs docs/_build/html
 
-Or simply:
+Install the development tools and run the test suite with tox_:
 
 .. code-block:: bash
 
-   $ python setup.py doc
+   $ python -m pip install -e ".[dev]"
+   $ tox
+
+Run the same tests directly with unittest:
+
+.. code-block:: bash
+
+   $ python -m unittest discover -s tests -p '*_test.py'
+
+To test against specific Python interpreters installed on your machine:
+
+.. code-block:: bash
+
+   $ tox -e py39,py310,py311,py312,py313,pypy3
 
 Also, the current documentation can be found at ReadTheDocs_.
 
@@ -94,11 +102,12 @@ Bonzo is available under the |apache-license|_.
    **Logo credits:** Image created by Freakofnurture_ (Wikimedia user),
    released into the public domain (|image-source|_).
 
-.. _Tornado: http://tornadoweb.org
-.. _smtpd: http://docs.python.org/library/smtpd.html
-.. _pip: http://pypi.python.org/pypi/pip
-.. _Sphinx: http://sphinx-doc.org
-.. _ReadTheDocs: https://bonzo.readthedocs.org
+.. _Tornado: https://www.tornadoweb.org/
+.. _smtpd: https://docs.python.org/3.11/library/smtpd.html
+.. _pip: https://pip.pypa.io/
+.. _Sphinx: https://www.sphinx-doc.org/
+.. _tox: https://tox.wiki/
+.. _ReadTheDocs: https://bonzo.readthedocs.io
 .. _apache-license: http://www.apache.org/licenses/LICENSE-2.0.html
 .. |apache-license| replace:: Apache License, Version 2.0
 .. _Freakofnurture: http://commons.wikimedia.org/wiki/User:Freakofnurture

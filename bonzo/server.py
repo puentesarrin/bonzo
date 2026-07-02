@@ -1,14 +1,13 @@
-# -*- coding: utf-8 -*-
 """A non-blocking, single-threaded SMTP server."""
 import email
-import functools
+import inspect
 import socket
 import sys
 
 from tornado.escape import to_unicode, utf8
+from tornado.ioloop import IOLoop
 from tornado.log import app_log, gen_log
 from tornado.tcpserver import TCPServer
-from tornado import stack_context
 
 from bonzo import errors, version
 
@@ -25,26 +24,29 @@ class SMTPServer(TCPServer):
 
     .. code:: python
 
-        from tornado.ioloop import IOLoop
+        import asyncio
         from bonzo.server import SMTPServer
 
-        def handle_request(request):
+        async def handle_request(request):
             do_something_with_the_message(request.message)
-            request.finish()
+            await request.finish_async()
 
-        smtp_server = SMTPServer(handle_request)
-        smtp_server.listen()
-        IOLoop.current().start()
+        async def main():
+            smtp_server = SMTPServer(handle_request)
+            smtp_server.listen(2525)
+            await asyncio.Event().wait()
+
+        asyncio.run(main())
     """
 
-    def __init__(self, request_callback, io_loop=None, **kwargs):
+    def __init__(self, request_callback, **kwargs):
         self.request_callback = request_callback
-        TCPServer.__init__(self, io_loop=io_loop, **kwargs)
+        TCPServer.__init__(self, **kwargs)
 
-    def handle_stream(self, stream, address):
-        """Handles the stream by executing the request callback.
-        """
-        SMTPConnection(stream, address, self.request_callback)
+    async def handle_stream(self, stream, address):
+        """Handles the stream by executing the request callback."""
+        connection = SMTPConnection(stream, address, self.request_callback)
+        await connection.run()
 
 
 class SMTPConnection(object):
@@ -64,16 +66,30 @@ class SMTPConnection(object):
         self.address = address
         self.request_callback = request_callback
         self.__hostname = None
+        self.__data = None
+        self._close_callback = None
+        self._waiting_for_request = None
         self.reset_arguments()
         if self.stream.socket.family in (socket.AF_INET, socket.AF_INET6):
             self.remote_ip = self.address[0]
         else:
             # Unix (or other) socket; fake the remote address
             self.remote_ip = '0.0.0.0'  # pragma: no cover
-        self._clear_request_state()
-        self._command_callback = stack_context.wrap(self._on_commands)
         self.stream.set_close_callback(self._on_connection_close)
-        self.write('220 Bonzo SMTP Server %s' % version)
+
+    async def run(self):
+        """Runs the SMTP command loop for this connection."""
+        try:
+            await self.write('220 Bonzo SMTP Server %s' % version)
+            delimiter = CRLF
+            while not self.stream.closed():
+                line = await self.stream.read_until(utf8(delimiter))
+                delimiter = await self._handle_line(line)
+        except Exception as e:
+            if not self.stream.closed():
+                await self._handle_request_exception(e)
+        finally:
+            self._clear_request_state()
 
     def reset_arguments(self):
         self.__state = self.COMMAND
@@ -81,80 +97,46 @@ class SMTPConnection(object):
         self.__rcpt = []
 
     def _clear_request_state(self):
-        """Clears the per-request state.
-
-        This is run in between requests to allow the previous handler
-        to be garbage collected (and prevent spurious close callbacks),
-        and when the connection is closed (to break up cycles and
-        facilitate garbage collection in cpython).
-        """
+        """Clears the per-request state."""
         self.reset_arguments()
-        self._request_finished = False
-        self._write_callback = None
         self._close_callback = None
+        if (self._waiting_for_request is not None and
+                not self._waiting_for_request.done()):
+            self._waiting_for_request.set_result(None)
+        self._waiting_for_request = None
 
     def set_close_callback(self, callback):
-        """Sets a callback that will be run when the connection is closed.
-        """
-        self._close_callback = stack_context.wrap(callback)
+        """Sets a callback that will be run when the connection is closed."""
+        self._close_callback = callback
 
     def _on_connection_close(self):
         if self._close_callback is not None:
             callback = self._close_callback
             self._close_callback = None
             callback()
-        # Delete any unfinished callbacks to break up reference cycles.
-        self._clear_request_state()
+        if (self._waiting_for_request is not None and
+                not self._waiting_for_request.done()):
+            self._waiting_for_request.set_result(None)
 
     def close(self):
-        """Close the stream.
-        """
+        """Close the stream."""
         self.stream.close()
-        # Remove this reference to self, which would otherwise cause a
-        # cycle and delay garbage collection of this connection.
         self._clear_request_state()
 
-    def write(self, chunk, callback=None, read_until_delimiter=CRLF):
+    async def write(self, chunk):
         """Writes a chunk of output to the stream."""
         if not self.stream.closed():
-            if callback is None:
-                callback = functools.partial(self.stream.read_until,
-                                             utf8(read_until_delimiter),
-                                             self._on_commands)
-            self._write_callback = stack_context.wrap(callback)
-            self.stream.write(utf8(chunk + CRLF), self._on_write_complete)
+            await self.stream.write(utf8(chunk + CRLF))
 
-    def write_ok(self, message='Ok', callback=None, read_until_delimiter=CRLF):
-        """Writes a successfully message to the output by sending a ``250``
-        status code.
-        """
-        self.write('%s %s' % (250, message), callback=callback,
-                   read_until_delimiter=read_until_delimiter)
+    async def write_ok(self, message='Ok'):
+        """Writes a successful ``250`` status response."""
+        await self.write('%s %s' % (250, message))
 
     def finish(self):
-        """Finishes the request."""
-        if not self.stream.writing():
-            self.stream.close()
-
-    def _on_write_complete(self):
-        if self._write_callback is not None:
-            callback = self._write_callback
-            self._write_callback = None
-            callback()
-        # _on_write_complete is enqueued on the IOLoop whenever the
-        # IOStream's write buffer becomes empty, but it's possible for
-        # another callback that runs on the IOLoop before it to
-        # simultaneously write more data and finish the request.  If
-        # there is still data in the IOStream, a future
-        # _on_write_complete will be responsible for calling
-        # _finish_request.
-        if self._request_finished and not self.stream.writing():
-            self._finish_request()
-
-    def _finish_request(self):
+        """Finishes the request by closing the connection."""
         self.close()
 
-    def _on_commands(self, line):
+    async def _handle_line(self, line):
         try:
             if self.__state == self.COMMAND:
                 line = to_unicode(line)[:-2]  # Remove delimiter '\r\n'
@@ -170,7 +152,10 @@ class SMTPConnection(object):
                 method = getattr(self, 'command_' + command.lower(), None)
                 if not method:
                     raise errors.NotImplementedCommand(command)
-                method(arg)
+                result = method(arg)
+                if inspect.isawaitable(result):
+                    result = await result
+                return result or CRLF
             elif self.__state == self.DATA:
                 line = to_unicode(line)[:-5]  # Remove delimiter '\r\n.\r\n'
                 data = []
@@ -179,11 +164,13 @@ class SMTPConnection(object):
                         data.append(text[1:])
                     else:
                         data.append(text)
-                self._on_data('\n'.join(data))
+                await self._on_data('\n'.join(data))
+                return CRLF
             else:
                 raise errors.InternalConfusion()
         except Exception as e:
-            self._handle_request_exception(e)
+            await self._handle_request_exception(e)
+            return CRLF
 
     def _request_summary(self):
         return ''
@@ -199,11 +186,11 @@ class SMTPConnection(object):
             app_log.error('Uncaught exception %s', self._request_summary(),
                           exc_info=(typ, value, tb))
 
-    def _handle_request_exception(self, e):
+    async def _handle_request_exception(self, e):
         self.log_exception(*sys.exc_info())
         if not isinstance(e, errors.SMTPError):
             e = errors.InternalConfusion()
-        self.write('%d %s' % (e.status_code, e.message))
+        await self.write('%d %s' % (e.status_code, e.message))
 
     def __getaddr(self, keyword, arg):
         address = None
@@ -218,46 +205,28 @@ class SMTPConnection(object):
                 address = address[1:-1]
         return address
 
-    def command_helo(self, arg):
-        """Handles the ``HELO`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadArguments` error code when the
-          network name of the connecting machine is not received.
-        - Raises a :class:`~bonzo.errors.BadSequence` when a ``HELO`` command
-          already was received.
-        """
+    async def command_helo(self, arg):
+        """Handles the ``HELO`` SMTP command."""
         if not arg:
             raise errors.BadArguments('HELO hostname')
         if self.__hostname:
             raise errors.BadSequence('Duplicate HELO/EHLO')
         self.__hostname = arg
-        self.write('250 Hello %s' % self.remote_ip)
+        await self.write('250 Hello %s' % self.remote_ip)
 
-    def command_noop(self, arg):
-        """Handles the ``NOOP`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
-          received.
-        """
+    async def command_noop(self, arg):
+        """Handles the ``NOOP`` SMTP command."""
         if arg:
             raise errors.BadArguments('NOOP')
-        self.write_ok()
+        await self.write_ok()
 
-    def command_quit(self, arg):
-        """Handles the ``QUIT`` SMTP command.
-        """
-        self.write('221 Bye', self.finish)
+    async def command_quit(self, arg):
+        """Handles the ``QUIT`` SMTP command."""
+        await self.write('221 Bye')
+        self.finish()
 
-    def command_mail(self, arg):
-        """Handles the ``MAIL`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadSequence` when a ``HELO`` command
-          wasn't previously received.
-        - Raises a :class:`~bonzo.errors.BadArguments` when the ``from`` address
-          is not received.
-        - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
-          already was received.
-        """
+    async def command_mail(self, arg):
+        """Handles the ``MAIL`` SMTP command."""
         if not self.__hostname:
             raise errors.BadSequence('Error: need HELO command')
         address = self.__getaddr('FROM:', arg) if arg else None
@@ -266,57 +235,60 @@ class SMTPConnection(object):
         if self.__mail:
             raise errors.BadSequence('Error: nested MAIL command')
         self.__mail = address
-        self.write_ok()
+        await self.write_ok()
 
-    def command_rcpt(self, arg):
-        """Handles the ``RCPT`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadSequence` when a ``MAIL`` command
-          was not previously received.
-        - Raises a :class:`~bonzo.errors.BadArguments` when the ``to`` address
-          is not received.
-        """
+    async def command_rcpt(self, arg):
+        """Handles the ``RCPT`` SMTP command."""
         if not self.__mail:
             raise errors.BadSequence('Error: need MAIL command')
         address = self.__getaddr('TO:', arg) if arg else None
         if not address:
             raise errors.BadArguments('RCPT TO:<address>')
         self.__rcpt.append(address)
-        self.write_ok()
+        await self.write_ok()
 
-    def command_rset(self, arg):
-        """Handles the ``RSET`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
-          received.
-        """
+    async def command_rset(self, arg):
+        """Handles the ``RSET`` SMTP command."""
         if arg:
             raise errors.BadArguments('RSET')
         self.reset_arguments()
-        self.write_ok()
+        await self.write_ok()
 
-    def command_data(self, arg):
-        """Handles the ``DATA`` SMTP command.
-
-        - Raises a :class:`~bonzo.errors.BadSequence` when a ``RCPT`` command
-          was not previously received.
-        - Raises a :class:`~bonzo.errors.BadArguments` when an argument is not
-          received.
-        """
+    async def command_data(self, arg):
+        """Handles the ``DATA`` SMTP command."""
         if not self.__rcpt:
             raise errors.BadSequence('Error: need RCPT command')
         if arg:
             raise errors.BadArguments('DATA')
         self.__state = self.DATA
-        self.write('354 End data with <CR><LF>.<CR><LF>',
-                   read_until_delimiter='{0}.{0}'.format(CRLF))
+        await self.write('354 End data with <CR><LF>.<CR><LF>')
+        return '{0}.{0}'.format(CRLF)
 
-    def _on_data(self, data):
+    async def _on_data(self, data):
         self.__data = data
         request = SMTPRequest(self, self.remote_ip, 'DATA',
                               hostname=self.__hostname, mail=self.__mail,
                               rcpt=self.__rcpt, data=self.__data)
-        self.request_callback(request)
+        finish_waiter = self.wait_for_request_finish()
+        result = self.request_callback(request)
+        if inspect.isawaitable(result):
+            await result
+        await finish_waiter
+
+    async def request_finished(self):
+        self.reset_arguments()
+        await self.write_ok()
+
+    def wait_for_request_finish(self):
+        if self._waiting_for_request is None or self._waiting_for_request.done():
+            loop = IOLoop.current().asyncio_loop
+            self._waiting_for_request = loop.create_future()
+        return self._waiting_for_request
+
+    def notify_request_finished(self):
+        if (self._waiting_for_request is not None and
+                not self._waiting_for_request.done()):
+            self._waiting_for_request.set_result(None)
 
 
 class SMTPRequest(object):
@@ -343,10 +315,16 @@ class SMTPRequest(object):
             self._message = email.message_from_string(self.data)
         return self._message
 
+    async def finish_async(self):
+        """Writes a successful response to the connection."""
+        try:
+            await self.connection.request_finished()
+        finally:
+            self.connection.notify_request_finished()
+
     def finish(self):
-        """Writes to the connection a successfully message."""
-        self.connection.reset_arguments()
-        self.connection.write_ok()
+        """Writes a successful response to the connection."""
+        IOLoop.current().spawn_callback(self.finish_async)
 
     def __repr__(self):
         attrs = ('remote_ip', 'hostname', 'mail', 'rcpt')

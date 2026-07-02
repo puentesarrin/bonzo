@@ -1,18 +1,22 @@
-# -*- coding: utf-8 -*-
+import asyncio
 import sys
-sys.path = ['..'] + sys.path
 
-import tornado.ioloop
+sys.path.insert(0, '..')
+
 import bonzo.smtp
 
 
 class Handler(bonzo.smtp.RequestHandler):
 
-    def data(self):
+    async def data(self):
         print(self.request)
 
 
-if __name__ == '__main__':
+async def main():
     application = bonzo.smtp.Application(Handler)
     application.listen(2525)
-    tornado.ioloop.IOLoop.current().start()
+    await asyncio.Event().wait()
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -1,20 +1,13 @@
-# -*- coding: utf-8 -*-
-"""Bonzo is a SMTP Server built on top of Tornado."""
-import sys
+"""Bonzo is an SMTP server built on top of Tornado."""
 
-if sys.version_info[0] >= 3:
-    basestring_type = str  # pragma: no cover
-else:
-    basestring_type = basestring  # pragma: no cover
-
-
-version_tuple = (0, 1, 2, '+')
+version_tuple = (0, 2, 0, '.dev0')
 
 
 def get_version_string():
-    if isinstance(version_tuple[-1], basestring_type):
+    if isinstance(version_tuple[-1], str):
         return '.'.join(map(str, version_tuple[:-1])) + version_tuple[-1]
     return '.'.join(map(str, version_tuple))
+
 
 version = get_version_string()
 """Current version of Bonzo."""
